@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/08/26 10:23:56 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/01 17:29:39 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,28 +15,97 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int						mod_minus(int a, int count)
+int						ft_isnum(char c, int exception)
 {
-	int					b;
+	if (c >= 48 && c <= 57)
+	{
+		if (c != exception + 48)
+			return (1);
+	}
+	return (0);
+}
 
-	b = 1;
+int						mod_plus(int a, int b)
+{
+	int					sign;
+
+	sign = 1;
+	b = (b < 0) ? -b : b;
 	if (a < 0)
 	{
 		a = -a;
-		b = -1;
+		sign = -1;
 	}
-	a = (a - count) * b;
+	a = (a + b) * sign;
 	return (a);
 }
 
-void				zero_flags(t_list *l)
+int						mod_minus(int a, int b)
 {
+	int					sign;
+
+	sign = 1;
+	b = (b < 0) ? -b : b;
+	if (a < 0)
+	{
+		a = -a;
+		sign = -1;
+	}
+	a = (a - b) * sign;
+	return (a);
+}
+
+int					to_power(long long a, int power)
+{
+	if (power == 0)
+		return (1);
+	a = a * to_power(a, power - 1);
+	return (a);
+}
+
+void					zero_flags(t_list *l)
+{
+	l->precision_minus = 0;
 	l->fhash = 0;
+	l->type = 0;
+	l->flag = 0;
+	l->start = 0;
 	l->fzero = 0;
 	l->fminus = 0;
 	l->fplus = 0;
-	l->spase = ' ';
 	l->length = 0;
+	l->precision = 6;
+	l->spase = ' ';
+}
+
+t_list					*struct_init()
+{
+	t_list					*l;
+	
+	l = (t_list*)malloc(sizeof(t_list) * 1);
+	if (!l)
+		return (NULL);
+	l->i = 0;
+	l->count = 0;
+	zero_flags(l);
+	return (l);
+}
+
+char				*ft_strndup(const char *str, int start, int end)
+{
+	int				i;
+	int				length;
+	char			*ptr;
+
+	i = 0;
+	length = end - start;
+	ptr = (char*)malloc(sizeof(char) * (length + 1));
+	if (!ptr)
+		return (NULL);
+	while (start <= end)
+		ptr[i++] = str[start++];
+	ptr[i] = '\0';
+	return (ptr);
 }
 
 char				*ft_str_rev(char **str)
@@ -118,12 +187,14 @@ char					*ft_itoa_usigned(unsigned long long n, int count, char flag)
 	return (ptr);
 }
 
-char					*ft_putnbr1(long long n, int count)
+char					*ft_putnbr1(unsigned long long a, int count, char flag)
 {
+	long long			n;
 	char				*integer;
 	int					i;
 
 	i = 0;
+	n = a;
 	if (!(integer = (char*)malloc(sizeof(char) * 20)))
 		return (NULL);
 	if (n < 0)
@@ -151,17 +222,143 @@ int						ft_num_sys(char flag)
 	return (num_system);
 }
 
-char					*choose_length_int(char *type, char *(*f)(long long, int), long long d)
+void					hash_and_plus_check(t_list *l, const char *format, char *out)
 {
-	if (ft_strcmp(type, "l") == 0)
-		return (f((long)d, 0));
-	else if (ft_strcmp(type, "ll") == 0)
-		return (f((long long)d, 0));
-	else if (ft_strcmp(type, "h") == 0)
-		return (f((short int)d, 0));
-	else if (ft_strcmp(type, "hh") == 0)
-		return (f((char)d, 0));
-	return (0);
+	if (l->fplus && l->spase != '0' && *out != '-' && (ft_memchr("dif", format[l->i], 3)))
+	{
+		write(1, "+", 1);
+		l->count++;
+	}
+	if (((l->fhash && ft_memchr("xX", format[l->i], 2))
+		|| (l->fhash && format[l->i] == 'p' && !l->fzero)))
+	{
+		(format[l->i] == 'x' || format[l->i] == 'p') ? write(1, "0x", 2) : 1;
+		(format[l->i] == 'X') ? write(1, "0X", 2) : 1;
+		l->count += 2;
+	}
+	else if (l->fhash && format[l->i] == 'o')
+	{
+		l->count += 1;
+		write(1, "0", 1);
+	}
+}
+
+int						flag_initialization(t_list *l, char *out, const char *format, int length)
+{
+	if (l->fminus && l->fzero)
+		l->fzero = 0;
+	if (l->fzero)
+	{
+		l->spase = '0';
+		(*out == '-') ? write(1, "-", 1) : 1;
+		(*out == '-') ? (out)++ : out;
+	}
+	if (l->spase == '0' && format[l->i] == 'p')
+	{
+		l->count += 2;
+		write(1, "0x", 2);
+	}
+	if (l->fhash && (ft_memchr("xX", format[l->i], 2) || format[l->i] == 'p'))
+		(l->length != 0) ? l->length = mod_minus(l->length, 2) : 1;
+	else if (l->fhash && format[l->i] == 'o')
+		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
+	if (l->fplus && (ft_memchr("dif", format[l->i], 3)) && *out != '-')
+	{
+		(l->spase == '0') ? write(1, "+", 1) : 1;
+		(l->spase == '0') ? l->count++ : 1;
+		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
+	}
+	if (l->precision < 0)
+	{		
+		l->length = 0;
+		return (0);
+	}
+	if (*out == '-')
+		l->precision = mod_plus(l->precision, 1);
+	if (l->precision > 0)
+		return (l->length = mod_minus(l->length, l->precision));
+	return (mod_minus(l->length, length));
+}
+
+int						output_with_precision(t_list *l, char *out, int out_length)
+{
+	char				*precision;
+	char				*final_out;
+	char				c;
+	int					prec;
+	int					length;
+	int					i;
+
+	i = 0;
+	c = (l->precision > 0) ? '0' : ' ';
+	prec = l->precision;
+	if (l->precision > 0)
+		l->precision -= out_length;
+	else
+		l->precision += out_length;
+	(l->precision < 0) ? l->precision *= (-1) : 1;
+	if (l->precision == 0)
+	{
+		write(1, out, out_length);
+		return (1);
+	}
+	precision = (char*)malloc(sizeof(char) * (l->precision + 1));
+	if (!precision)
+		return (-1);
+	if (*out == '-' && prec > 0)
+	{
+		out++;
+		precision[i++] = '-';
+	}
+	if (l->precision)
+		while (l->precision-- > 0)
+			precision[i++] = c;
+	precision[i] = '\0';
+	final_out = (prec > 0) ? ft_strjoin(precision, out) : ft_strjoin(out, precision);
+	length = ft_strlen(final_out);
+	write(1, final_out, length);
+	return (1);
+}
+
+char					*ft_spaces(t_list *l, int count_summ, int out_length)
+{
+	char				*spaces;
+	char				space;
+	int					i;
+
+	i = 0;
+	space = l->spase;
+	spaces = (char*)malloc(sizeof(char) * (count_summ + 1));
+	while (count_summ-- > 0)
+		spaces[i++] = space;
+	spaces[i] = '\0';
+	return (spaces);
+}
+
+void					chr_output(t_list *l, char *out, int out_length, const char *format)
+{
+	int					count_summ;
+
+	count_summ = flag_initialization(l, out, format, out_length);
+	if (count_summ > 0)
+	{
+		write(1, ft_spaces(l, count_summ, out_length), count_summ);
+		hash_and_plus_check(l, format, out);
+		output_with_precision(l, out, out_length);
+	}
+	else if (count_summ < 0)
+	{
+		count_summ *= (-1);
+		hash_and_plus_check(l, format, out);
+		output_with_precision(l, out, out_length);
+		write(1, ft_spaces(l, count_summ, out_length), count_summ);
+	}
+	else
+	{
+		hash_and_plus_check(l, format, out);
+		output_with_precision(l, out, out_length);
+	}
+	l->count += count_summ + out_length;
 }
 
 char					*choose_length_chr(char *type, char *(f)(unsigned long long, int, char),
@@ -178,73 +375,6 @@ char					*choose_length_chr(char *type, char *(f)(unsigned long long, int, char)
 	return (0);
 }
 
-void					hash_and_plus_check(t_list *l, const char *format, char *out)
-{
-	if (l->fplus && l->spase != '0' && out[0] != '-'
-		&& (format[l->i] == 'd' || format[l->i] == 'i'))
-		write(1, "+", 1);
-	if (((l->fhash && ft_memchr("xX", format[l->i], 2))
-		|| (l->fhash && format[l->i] == 'p' && !l->fzero)))
-	{
-		(format[l->i] == 'x' || format[l->i] == 'p') ? write(1, "0x", 2) : 1;
-		(format[l->i] == 'X') ? write(1, "0X", 2) : 1;
-	}
-	else if (l->fhash && format[l->i] == 'o')
-		write(1, "0", 1);
-}
-
-void					flag_initialization(t_list *l, char **out, const char *format)
-{
-	if (l->fzero)
-	{
-		l->spase = '0';
-		if ((*out)[0] == '-')
-		{
-			write(1, "-", 1);
-			(*out)++;
-		}
-	}
-	if ((l->fhash && ft_memchr("xX", format[l->i], 2))
-		|| (l->fhash && format[l->i] == 'p'))
-		l->length = mod_minus(l->length, 2);
-	else if (l->fhash && format[l->i] == 'o')
-		l->length = mod_minus(l->length, 1);
-	if (l->fplus && (format[l->i] == 'd' || format[l->i] == 'i'))
-		l->length = mod_minus(l->length, 1);
-}
-
-void					chr_output(t_list *l, char *out, int out_length, const char *format)
-{
-	int					count;
-	int					count_summ;
-
-	flag_initialization(l, &out, format);
-	count = l->length;
-	if ((count_summ = count - out_length) > 0)
-	{
-		(l->fplus && l->spase == '0' && (format[l->i] == 'd' || format[l->i] == 'i')
-			&& out[0] != '-') ? write(1, "+", 1) : 1;
-		(l->spase == '0' && format[l->i] == 'p')
-			? write(1, "0x", 2) : 1;
-		while (count_summ-- > 0)
-			write(1, &l->spase, 1);
-		hash_and_plus_check(l, format, out);
-		write(1, out, out_length);
-	}
-	else if ((count_summ = count + out_length) < 0)
-	{
-		hash_and_plus_check(l, format, out);
-		write(1, out, out_length);
-		while (count_summ++ != 0)
-			write(1, &l->spase, 1);
-	}
-	else
-	{
-		hash_and_plus_check(l, format, out);
-		write(1, out, out_length);
-	}
-}
-
 int						output_di_flags(const char *format, va_list args,
 									char *type, t_list *l)
 {
@@ -253,16 +383,16 @@ int						output_di_flags(const char *format, va_list args,
 	int					out_length;
 
 	d = va_arg(args, long long);
-	if (format[l->i] == 'i' || format[l->i] == 'd')
-		d_chr = ft_putnbr1((int)d, 0);
+	if (!(*type))
+		d_chr = ft_putnbr1((int)d, 0, 'a');
 	else
-		d_chr = choose_length_int(type, ft_putnbr1, d);
+		d_chr = choose_length_chr(type, ft_putnbr1, d, 'a');
 	if (!d_chr)
 		return (-1);
 	out_length = ft_strlen(d_chr);
 	chr_output(l, d_chr, out_length, format);
 	free(d_chr);
-	return (l->count);
+	return (1);
 }
 
 int						output_u_flags(const char *format, va_list args,
@@ -273,7 +403,7 @@ int						output_u_flags(const char *format, va_list args,
 	int					count;
 
 	u = va_arg(args, unsigned long long);
-	if (type[0] == 'i')
+	if (!(*type))
 		out = ft_itoa_usigned((unsigned int)u, 0, type[0]);
 	else
 		out = choose_length_chr(type, ft_itoa_usigned, u, 'u');
@@ -282,23 +412,20 @@ int						output_u_flags(const char *format, va_list args,
 	count = ft_strlen(out);
 	chr_output(l, out, count, format);
 	free(out);
-	return (count);
+	return (1);
 }
 
 int						output_xo_flags(const char* format, va_list args,
 									t_list *l, char *type)
 {
 	unsigned long long	xo;
-	char				flag;
 	char				*output;
 	int					count;
 	int					num_system;
 	
-	flag = type[0];
 	xo = va_arg(args, unsigned long long);
 	if (!(*type))
-		output = decimy_to_any((unsigned int)xo,
-			ft_num_sys(format[l->i]), format[l->i]);
+		output = decimy_to_any((unsigned int)xo, ft_num_sys(format[l->i]), format[l->i]);
 	else
 		output = choose_length_chr(type, decimy_to_any, xo, format[l->i]);
 	if (!output)
@@ -351,123 +478,228 @@ int					output_cs_flags(const char *format, va_list args, t_list *l)
 	return (1);
 }
 
+char				*creat_double_chr(long long order, long long mantis)
+{
+	char			*double_chr;
+	char			*chr_order;
+	char			*chr_mantis;
+	int				l_order;
+	int				l_mantis;
+
+	chr_order = ft_itoa(order);
+	chr_mantis = ft_itoa(mantis);
+	if (!chr_order || !chr_mantis)
+		return (NULL);
+	l_order = ft_strlen(chr_order);
+	l_mantis = ft_strlen(chr_mantis);
+	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + 1))))
+		return (NULL);
+	double_chr[l_order + 1] = '\0';
+	double_chr = ft_strcpy(double_chr, chr_order);
+	double_chr[l_order] = '.';
+	double_chr = ft_strcat(double_chr, chr_mantis);
+	return (double_chr);
+}
+
+int					output_f_flags(const char *format, va_list args, t_list *l, char *type)
+{
+	double			f;
+	long long		order;
+	long long		mantis;
+	char			*double_num;
+	int				length;
+
+	l->precision = (!l->precision) ? 6 : l->precision;
+	f = va_arg(args, double);
+	order = f;
+	mantis = (f - order) * to_power(10, l->precision);
+	(mantis < 0) ? mantis = -mantis : mantis;
+	double_num = creat_double_chr(order, mantis);
+	if (!double_num)
+		return (-1);
+	length = ft_strlen(double_num);
+	chr_output(l, double_num, length, format);
+	free(double_num);
+	return (1);
+	
+}
+
 int					ft_flag_function_find(const char *format, va_list args, t_list *l, char *type)
 {
 	int 			i;
+	int				res;
 
 	i = 0;
-	while (format[l->i])
-	{
-		if (ft_memchr("di", format[l->i], 2))
-			return (output_di_flags(format, args, type, l));
-		else if (format[l->i] == 'u')
-			return (output_u_flags(format, args, type, l));
-		else if (ft_memchr("xXo", format[l->i], 3))
-			return (output_xo_flags(format, args, l, type));
-		else if (ft_memchr("cs", format[l->i], 2))
-			return (output_cs_flags(format, args, l));
-		else if (format[l->i] == 'p')
-			return (output_p_flags(format, args, l, type));
-	}
-	return (0);
+	res = 0;
+	if (ft_memchr("di", format[l->i], 2))
+		res = output_di_flags(format, args, type, l);
+	else if (format[l->i] == 'u')
+		res = output_u_flags(format, args, type, l);
+	else if (ft_memchr("xXo", format[l->i], 3))
+		res = output_xo_flags(format, args, l, type);
+	else if (ft_memchr("cs", format[l->i], 2))
+		res = output_cs_flags(format, args, l);
+	else if (format[l->i] == 'p')
+		res = output_p_flags(format, args, l, type);
+	else if (format[l->i] == 'f')
+		res = output_f_flags(format, args, l, type);
+	l->i++;
+	return (res);
 }
 
-// void					procent_check(const char *format, t_list *l)
-// {
-	
-// }
-
-void					flags_check(const char *format, t_list *l)
+int					unknow_output(const char *format, t_list *l)
 {
-	int					i;
+	char			*out;
+	int				length;
 
-	i = l->i;
-	while (format[l->i])
+	if ((l->save - l->i) < 0)
 	{
-		if (format[l->i] == '#')
-			l->fhash = 1;
-		else if (format[l->i] == '+')
-			l->fplus = 1;
-		else if (format[l->i] == '0'&& ((format[l->i + 1] >= 48
-			&& format[l->i + 1] <= 57)|| format[l->i + 1] == '#'))
-			l->fzero = 1;
-		else if (format[l->i] == '-')
-			l->fminus = 1;
+		out = "";
+		length = 0;
+		l->length--;
+		l->i = l->save;
+	}
+	else
+	{
+		out = ft_strndup(format, l->i, l->save);
+		if (!out)
+			return (-1);
+		length = ft_strlen(out);
+		l->i = l->save;
 		l->i++;
 	}
-	l->i = i;
-}
-
-int						length_check(const char *format, t_list *l)
-{
-	char				*length_output;
-	int					i;
-
-	i = 0;
-	l->length = 0;
-	while (!(format[l->i] >= 48 && format[l->i] <= 57)
-		&& !(ft_memchr("diouxXlhscfp", format[l->i], 12)) && format)
-		l->i++;
-	length_output = (char*)malloc(sizeof(char)	* ft_strlen(format));
-	if (!length_output)
-		return (-1);
-	l->spase = ' ';
-	if (l->fminus)
-	{
-		length_output[i] = '-';
-		i++;
-	}
-	(l->fminus && l->fzero) ? l->fzero = 0 : l->fzero;
-	while (format[l->i] >= 48 && format[l->i] <= 57)
-		length_output[i++] = format[l->i++];
-	length_output[i] = '\0';
-	(i > 0) ? l->length = ft_atoi(length_output) : l->length;
+	chr_output(l, out, length, format);
 	return (1);
 }
 
-int					l_h_flags(const char *format, va_list args, t_list *l)
+char				*type_define(int lon, int shor)
 {
 	char			*type;
-	
-	flags_check(format, l);
-	if (!(length_check(format, l)))
-		return (-1);
-	while (!(ft_memchr("diouxXlhscfp", format[l->i], 12)))
-		l->i++;
-	if (format[l->i])
-	{
-		if (format[l->i + 1] == 'l')
-			type = "ll";
-		else if (format[l->i + 1] == 'h')
-			type = "hh";
-		else if (format[l->i] == 'h' && format[l->i + 1] != 'h')
-			type = "h";
-		else if (format[l->i] == 'l')
-			type = "l";
-		else
-			type = "";
-		l->i += ft_strlen(type);
-	}
-	return (ft_flag_function_find(format, args, l, type));
+
+	if ((lon < 0 || shor < 0) || (lon == 2 && !shor))
+		type = "ll";
+	else if (lon == 1 && !shor)
+		type = "l";
+	else if(!lon && shor == 1)
+		type = "h";
+	else if (!lon && shor == 2)
+		type = "hh";
+	return (type);
 }
 
-t_list				*struct_init()
+char				*type_parse(const char *format, t_list *l)
 {
-	t_list			*l;
+	int				lon;
+	int				shor;
 	
-	l = (t_list*)malloc(sizeof(t_list) * 1);
-	if (!l)
-		return (NULL);
-	l->i = 0;
-	l->length = 0;
-	l->count = 0;
-	l->fhash = 0;
-	l->fzero = 0;
-	l->fminus = 0;
-	l->fplus = 0;
-	l->start = 0;
-	l->spase = ' ';
-	return (l);
+	lon = 0;
+	shor = 0;
+	while (ft_memchr("lh", format[l->i], 2))
+	{
+		if (format[l->i] == 'l')
+			lon = (!lon) ? 1 : lon + 1;
+		else if (format[l->i] == 'h')
+			shor = (!shor) ? 1 : shor + 1;
+		else if (format[l->i] == 'h' && lon)
+		{
+			shor = -1;
+			break ;
+		}
+		else if (format[l->i] == 'l' && shor)
+		{
+			lon = -1;
+			break ;
+		}
+		l->i++;
+	}
+	return (type_define(lon, shor));
+}
+
+int						length_check(const char *format, t_list *l, int sign)
+{
+	char				*length_output;
+	int					length;
+	int					i;
+	int					j;
+
+	i = 0;
+	j = l->save;
+	length = 0;
+	while (!(format[j] >= 48 && format[j] <= 57))
+		j++;
+	if (!(length_output = (char*)malloc(sizeof(char) * ft_strlen(format))))
+		return (-1);
+	if (sign > 0)
+		length_output[i++] = '-';
+	while (format[j] >= 48 && format[j] <= 57)
+		length_output[i++] = format[j++];
+	length_output[i] = '\0';
+	i ? length = ft_atoi(length_output) : length;
+	ft_strlen(length_output) > 1 ? l->save = j - 1 : j;
+	l->i = l->save;
+	return (length);
+}
+
+void				flag_check(const char *format, t_list *l)
+{
+	if (format[l->save] == '#' && !l->fhash)
+		l->fhash = l->save;
+	else if (format[l->save] == '+' && !l->fplus)
+		l->fplus = l->save;
+	else if (format[l->save] == '0' && !l->fzero)
+		l->fzero = l->save;
+	else if (format[l->save] == '-' && !l->fminus)
+		l->fminus = l->save;
+	else if (ft_isnum(format[l->save], 0))
+		l->length = length_check(format, l, l->fminus);
+	else if (format[l->save] == '.' && (ft_isnum(format[l->save + 1], 10) || ft_memchr("+-", format[l->save + 1], 2)))
+	{
+		l->precision_minus = (format[l->save + 1] == '-') ? 1 : -1;
+		l->precision = length_check(format, l, l->precision_minus);
+	}
+}
+
+int					pars_format(const char *format, t_list *l)
+{
+	int					save;
+
+	l->save = l->i;
+	while (format[l->save] != '%' && format[l->save] != '\n' && format[l->save])
+	{
+		if (!ft_memchr("diouxXscpf+-_. lh#", format[l->save], 17) && !ft_isnum(format[l->save], 112))
+			return (0);
+		if (ft_memchr("diouxXscpf", format[l->save], 10) && !(l->flag))
+		{
+			l->flag = l->save;
+			return (1);
+		}
+		else if (ft_memchr("lh", format[l->save], 2) && !(l->type))
+			l->type = l->save;
+		flag_check(format, l);
+		l->save++;
+	}
+	return (1);
+}
+
+int					specs_and_flags_fing(const char *format, va_list args, t_list *l)
+{
+	char			*type;
+	int				res;
+
+	res = pars_format(format, l);
+	if (res && l->flag)
+	{
+		l->i = l->type;
+		if (format [l->i] == 'l' || format[l->i] == 'h')
+			type = type_parse(format, l);
+		else
+			type = "";
+		l->i = l->flag;
+		return (ft_flag_function_find(format, args, l, type));
+	}
+	else
+		return (unknow_output(format, l));
+	return (-1);
 }
 
 int					ft_variants(const char *format, va_list args, t_list *l)
@@ -475,20 +707,23 @@ int					ft_variants(const char *format, va_list args, t_list *l)
 	int				save_i;
 
 	save_i = l->i;
-	while (!ft_memchr("diouxXlhscfp", format[l->i], 12))
+	while (format[l->i] == '%' && format[l->i])
 	{
-		if (format[l->i] == '%' && format[l->i + 1] == '%')
-		{
-			write(1, "%", 1);
-		}
 		if (format[l->i] == '%' && !(l->start))
 			l->start = 1;
 		else if (format[l->i] == '%' && l->start)
+		{
+			if (format[l->i] == '%' && format[l->i - 1] == '%')
+			{
+				write(1, "%", 1);
+				l->count += 1;
+			}
 			l->start = 0;
+		}
 		l->i++;
 	}
-	l->i = save_i;
-	l_h_flags(format, args, l);
+	if (l->start)
+		return (specs_and_flags_fing(format, args, l));
 	return (1);
 }
 
@@ -496,11 +731,13 @@ int					ft_printf(const char *format, ...)
 {
 	va_list			args;
 	t_list			*l;
+	int				length;
 
+	length = ft_strlen(format);
 	va_start(args, format);
 	if (!(l = struct_init()))
 		return (-1);
-	while (format[l->i])
+	while (l->i < length)
 	{
 		if (format[l->i] == '%')
 		{
@@ -509,8 +746,10 @@ int					ft_printf(const char *format, ...)
 			zero_flags(l);
 		}
 		else
-			write(1, &(format[l->i]), 1);
-		l->i++;
+		{
+			write(1, &(format[l->i++]), 1);
+			l->count++;
+		}
 	}
 	free(l);
 	return (l->count);
@@ -518,11 +757,22 @@ int					ft_printf(const char *format, ...)
 
 int					main(int argc, char **argv)
 {
-	int		num_system;
+	int count;
+	int	count1;
 
-	num_system = 16;
-	ft_printf("%%%%7p\n",  "aaasasdasc");
-	printf("%%%%7p%%\n",  "aaasasdasc");
-	// ft_putstr("\033[034mddf");
+	count1 = ft_printf("%-23.19d\n",  -11234567, "aaasasdasc", 1234567.1234567890);
+	count = printf("%-23.19d\n", -11234567, 1234567.1234567890);
+	// printf("%d\n", count);
 	return (0);
 }
+
+//Строки для теста
+//"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
+//"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
+//"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
+//"%0134jkwwww65ytcyxutrcvhbj.4+064f\n",  -11234567.123456789100
+//"%123y70d-065pmamkapvoya%.3f\n",  -11234567, "aaasasdasc", 1234567.1234567890
+
+//Если все идут hhhhhhhh то вывод будет на ll
+//Если все идут llllllll то вывод будет на ll
+//Если все идут hhhlhllhh и все в этом роде то вывод будет на ll

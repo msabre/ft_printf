@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/08/25 21:27:08 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/01 00:08:54 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,21 @@ typedef struct			s_list
 {
 	int					count;
 	int					i;
+	int					save;
+	int					type;
+	int					flag;
 	int					start;
 	int					fhash;
 	int					fplus;
 	int					fzero;
 	int					fminus;
+	int					precision_minus;
 	int					length;
+	int					precision;
 	char				spase;
+	void				*content;
+	size_t				content_size;
+	struct s_list		*next;
 }						t_list;
 
 typedef struct			s_map_ind
@@ -108,7 +116,7 @@ char					*ft_strsub(char const *s, unsigned int start,
 char					*ft_strjoin(char const *s1, char const *s2);
 char					*ft_strtrim(char const *s);
 char					**ft_strsplit(char const *s, char c);
-char					*ft_itoa(int n);
+char					*ft_itoa(long long n);
 void					ft_putchar(char c);
 void					ft_putstr(char const *s);
 void					ft_putendl(char const *s);
