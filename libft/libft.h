@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/01 00:08:54 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/01 18:58:30 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ typedef struct			s_list
 {
 	int					count;
 	int					i;
+	int					dot;
 	int					save;
 	int					type;
 	int					flag;

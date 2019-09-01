@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/01 17:29:39 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/01 20:26:32 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ void					zero_flags(t_list *l)
 {
 	l->precision_minus = 0;
 	l->fhash = 0;
+	l->dot = 0;
 	l->type = 0;
 	l->flag = 0;
 	l->start = 0;
@@ -74,7 +75,7 @@ void					zero_flags(t_list *l)
 	l->fminus = 0;
 	l->fplus = 0;
 	l->length = 0;
-	l->precision = 6;
+	l->precision = 0;
 	l->spase = ' ';
 }
 
@@ -243,16 +244,10 @@ void					hash_and_plus_check(t_list *l, const char *format, char *out)
 	}
 }
 
-int						flag_initialization(t_list *l, char *out, const char *format, int length)
+int						flag_initialization(t_list *l, char **out, const char *format, int length)
 {
 	if (l->fminus && l->fzero)
 		l->fzero = 0;
-	if (l->fzero)
-	{
-		l->spase = '0';
-		(*out == '-') ? write(1, "-", 1) : 1;
-		(*out == '-') ? (out)++ : out;
-	}
 	if (l->spase == '0' && format[l->i] == 'p')
 	{
 		l->count += 2;
@@ -262,22 +257,35 @@ int						flag_initialization(t_list *l, char *out, const char *format, int lengt
 		(l->length != 0) ? l->length = mod_minus(l->length, 2) : 1;
 	else if (l->fhash && format[l->i] == 'o')
 		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
-	if (l->fplus && (ft_memchr("dif", format[l->i], 3)) && *out != '-')
+	if (l->fplus && (ft_memchr("dif", format[l->i], 3)) && **out != '-')
 	{
 		(l->spase == '0') ? write(1, "+", 1) : 1;
 		(l->spase == '0') ? l->count++ : 1;
 		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
 	}
+	if (l->fzero)
+	{
+		l->spase = '0';
+		if (l->length != 0)
+		{
+			(**out == '-') ? write(1, "-", 1) : 1;
+			(**out == '-') ? (*out)++ : *out;
+		}
+	}
 	if (l->precision < 0)
-	{		
+	{
 		l->length = 0;
 		return (0);
 	}
-	if (*out == '-')
+	if (**out == '-' && l->precision != 0)
 		l->precision = mod_plus(l->precision, 1);
-	if (l->precision > 0)
-		return (l->length = mod_minus(l->length, l->precision));
-	return (mod_minus(l->length, length));
+	if (l->length != 0)
+	{
+		if (l->precision > 0 && l->precision > length)
+			return (l->length = mod_minus(l->length, l->precision));
+		return (mod_minus(l->length, length));
+	}
+	return (0);
 }
 
 int						output_with_precision(t_list *l, char *out, int out_length)
@@ -286,37 +294,38 @@ int						output_with_precision(t_list *l, char *out, int out_length)
 	char				*final_out;
 	char				c;
 	int					prec;
-	int					length;
 	int					i;
 
 	i = 0;
-	c = (l->precision > 0) ? '0' : ' ';
-	prec = l->precision;
-	if (l->precision > 0)
-		l->precision -= out_length;
+	if (l->precision > 0 && l->precision > out_length)
+	{
+		c = (l->precision > 0) ? '0' : ' ';
+		prec = l->precision;
+		l->precision = mod_minus(l->precision, out_length);
+		(l->precision < 0) ? l->precision *= (-1) : 1;
+		if (l->precision == 0)
+		{
+			write(1, out, out_length);
+			return (1);
+		}
+		precision = (char*)malloc(sizeof(char) * (l->precision + 1));
+		if (!precision)
+			return (-1);
+		if (*out == '-' && prec > 0)
+		{
+			out++;
+			precision[i++] = '-';
+		}
+		if (l->precision)
+			while (l->precision-- > 0)
+				precision[i++] = c;
+		precision[i] = '\0';
+		final_out = (prec > 0) ? ft_strjoin(precision, out) : ft_strjoin(out, precision);
+		out_length = ft_strlen(final_out);
+	}
 	else
-		l->precision += out_length;
-	(l->precision < 0) ? l->precision *= (-1) : 1;
-	if (l->precision == 0)
-	{
-		write(1, out, out_length);
-		return (1);
-	}
-	precision = (char*)malloc(sizeof(char) * (l->precision + 1));
-	if (!precision)
-		return (-1);
-	if (*out == '-' && prec > 0)
-	{
-		out++;
-		precision[i++] = '-';
-	}
-	if (l->precision)
-		while (l->precision-- > 0)
-			precision[i++] = c;
-	precision[i] = '\0';
-	final_out = (prec > 0) ? ft_strjoin(precision, out) : ft_strjoin(out, precision);
-	length = ft_strlen(final_out);
-	write(1, final_out, length);
+		final_out = out;
+	write(1, final_out, out_length);
 	return (1);
 }
 
@@ -339,7 +348,7 @@ void					chr_output(t_list *l, char *out, int out_length, const char *format)
 {
 	int					count_summ;
 
-	count_summ = flag_initialization(l, out, format, out_length);
+	count_summ = flag_initialization(l, &out, format, out_length);
 	if (count_summ > 0)
 	{
 		write(1, ft_spaces(l, count_summ, out_length), count_summ);
@@ -561,7 +570,7 @@ int					unknow_output(const char *format, t_list *l)
 	}
 	else
 	{
-		out = ft_strndup(format, l->i, l->save);
+		out = ft_strndup(format, l->save, l->save);
 		if (!out)
 			return (-1);
 		length = ft_strlen(out);
@@ -651,9 +660,10 @@ void				flag_check(const char *format, t_list *l)
 	else if (format[l->save] == '-' && !l->fminus)
 		l->fminus = l->save;
 	else if (ft_isnum(format[l->save], 0))
-		l->length = length_check(format, l, l->fminus);
+			l->length = length_check(format, l, l->fminus);
 	else if (format[l->save] == '.' && (ft_isnum(format[l->save + 1], 10) || ft_memchr("+-", format[l->save + 1], 2)))
 	{
+		l->dot = l->save;
 		l->precision_minus = (format[l->save + 1] == '-') ? 1 : -1;
 		l->precision = length_check(format, l, l->precision_minus);
 	}
@@ -666,7 +676,7 @@ int					pars_format(const char *format, t_list *l)
 	l->save = l->i;
 	while (format[l->save] != '%' && format[l->save] != '\n' && format[l->save])
 	{
-		if (!ft_memchr("diouxXscpf+-_. lh#", format[l->save], 17) && !ft_isnum(format[l->save], 112))
+		if (!ft_memchr("diouxXscpf+-_. lh#", format[l->save], 18) && !ft_isnum(format[l->save], 112))
 			return (0);
 		if (ft_memchr("diouxXscpf", format[l->save], 10) && !(l->flag))
 		{
@@ -678,6 +688,7 @@ int					pars_format(const char *format, t_list *l)
 		flag_check(format, l);
 		l->save++;
 	}
+	l->i = l->save;
 	return (1);
 }
 
@@ -760,8 +771,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 
-	count1 = ft_printf("%-23.19d\n",  -11234567, "aaasasdasc", 1234567.1234567890);
-	count = printf("%-23.19d\n", -11234567, 1234567.1234567890);
+	count1 = ft_printf("123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc");
+	count = printf("123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc");
 	// printf("%d\n", count);
 	return (0);
 }
