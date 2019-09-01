@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/01 20:26:32 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/01 20:28:16 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -757,7 +757,7 @@ int					ft_printf(const char *format, ...)
 			zero_flags(l);
 		}
 		else
-		{
+		{ 
 			write(1, &(format[l->i++]), 1);
 			l->count++;
 		}
