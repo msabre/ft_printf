@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/07 20:09:17 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/07 20:51:21 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,14 +263,11 @@ static void					hash_and_plus_check(t_list *l, const char *format, char *out)
 
 static void					f_zero(t_list *l, char ***out, const char *format)
 {
-	if (l->fzero)
+	if (l->fzero && l->precision == 0)
 	{
 		l->spase = '0';
-		if (l->length != 0)
-		{
-			(***out == '-') ? write(1, "-", 1) : 1;
-			(***out == '-') ? (**out)++ : **out;
-		}
+		(***out == '-') ? write(1, "-", 1) : 1;
+		(***out == '-') ? (**out)++ : **out;
 	}
 	if (l->fplus && (ft_memchr("dif", format[l->i], 3)) && ***out != '-')
 	{
@@ -312,12 +309,14 @@ static int						flag_initialization(t_list *l, char **out, const char *format, i
 	}
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
-	if (**out == '0' && l->dot != 0)
+	if (**out == '0' && l->dot != 0 && l->precision < 1)
 	{
 		// free(*out);
 		*out = "";
 		return (l->length);
 	}
+	if (**out == '-' && l->precision > 0 && !l->length)
+		l->precision++;
 	if (((l->length < 0) ? l->length * (-1) : l->length) <= length)
 		return (0);
 	if (l->fminus && l->fzero)
@@ -332,8 +331,6 @@ static int						flag_initialization(t_list *l, char **out, const char *format, i
 		l->length = 0;
 		return (0);
 	}
-	if (**out == '-' && l->precision != 0)
-		l->precision = mod_plus(l->precision, 1);
 	return (**out || (!(**out) && format[l->i] == 'c'))
 		? define_countsumm(l, length, format) : l->length;
 }
@@ -473,7 +470,7 @@ static int						output_di_flags(const char *format, va_list args,
 	{
 		out_length--;
 		l->length--;
-		l->count++;
+		(l->precision == 0) ? l->count++ : l->count;
 	}
 	chr_output(l, d_chr, out_length, format);
 	free(d_chr);
@@ -852,17 +849,17 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1 = 1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1 = 1;
 
-	count = ft_printf("%03.2d\n", 0);
-	count1 = printf("%03.2d\n", 0);
-	printf("%d\n", count);
-	printf("%d", count1);
-	return (0);
-}
+// 	// count = ft_printf("%03.2d\n", -1);
+// 	count1 = printf("@moulitest: %.10d\n", -42);
+// 	printf("%d\n", count);
+// 	printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
