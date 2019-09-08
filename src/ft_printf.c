@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/07 20:51:21 by msabre           ###   ########.fr       */
+/*   Updated: 2019/09/09 00:19:12 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,13 +248,13 @@ static void					hash_and_plus_check(t_list *l, const char *format, char *out)
 		write(1, "+", 1);
 		l->count++;
 	}
-	if ((l->fhash && (ft_memchr("xX", format[l->i], 2) || format[l->i] == 'p') && !l->fzero && *out != '0'))
+	if (l->fhash && !l->fzero && ((ft_memchr("xX", format[l->i], 2) && *out != '0') || (format[l->i] == 'p')))
 	{
 		(format[l->i] == 'x' || format[l->i] == 'p') ? write(1, "0x", 2) : 1;
 		(format[l->i] == 'X') ? write(1, "0X", 2) : 1;
 		l->count += 2;
 	}
-	else if (l->fhash && format[l->i] == 'o')
+	else if (l->fhash && format[l->i] == 'o' && *out != '0')
 	{
 		l->count += 1;
 		write(1, "0", 1);
@@ -300,11 +300,14 @@ static int						define_countsumm(t_list *l, int length, const char *format)
 
 static int						flag_initialization(t_list *l, char **out, const char *format, int length)
 {
+	// if (**out == '-' && l->fzero)
+	// 	l->length--;
 	if (**out == '-' && l->fplus)
 		l->fplus = 0;
 	if (l->sp && !l->fplus && **out != '-')
 	{
 		write(1, " ", 1);
+		l->length--;
 		l->count++;	
 	}
 	if (mod_compair(l->precision, l->length) == 1)
@@ -317,7 +320,8 @@ static int						flag_initialization(t_list *l, char **out, const char *format, i
 	}
 	if (**out == '-' && l->precision > 0 && !l->length)
 		l->precision++;
-	if (((l->length < 0) ? l->length * (-1) : l->length) <= length)
+	if (mod_compair(l->length, length) != 1
+		|| (format[l->i] == 'p' && mod_compair(l->length, length + 2) != 1))
 		return (0);
 	if (l->fminus && l->fzero)
 		l->fzero = 0;
@@ -728,7 +732,7 @@ static int						length_check(const char *format, t_list *l, int sign)
 
 static void				flag_check(const char *format, t_list *l)
 {
-	if (!l->sp && format[l->save] == ' ' && ft_memchr("dioxX", format[l->save + 1], 6))
+	if (format[l->save] == ' ' && (ft_memchr("dioxX", format[l->save + 1], 6) || ft_isnum(format[l->i + 1], 10)))
 		l->sp = 1;
 	else if (format[l->save] == '#' && !l->fhash)
 		l->fhash = l->save;
@@ -854,8 +858,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1 = 1;
 
-// 	// count = ft_printf("%03.2d\n", -1);
-// 	count1 = printf("@moulitest: %.10d\n", -42);
+// 	count = ft_printf("%15.4d\n", -42);
+// 	count1 = printf("%15.4d\n", -42);
 // 	printf("%d\n", count);
 // 	printf("%d", count1);
 // 	return (0);
