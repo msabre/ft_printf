@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/09 04:07:43 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/01 21:08:09 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ static int						mod_minus(int a, int b)
 	return (a);
 }
 
-static int					to_power(long long a, int power)
+static unsigned long long					to_power(unsigned long long a, int power)
 {
 	if (power == 0)
 		return (1);
@@ -341,7 +341,7 @@ static char						*precision_config(t_list *l, char **out, int out_length, int pr
 	char						*precision;
 	char						c;
 	int							i;
-	
+
 	i = 0;
 	c = (l->precision > 0) ? '0' : ' ';
 	l->precision = mod_minus(l->precision, out_length);
@@ -576,58 +576,354 @@ static int					output_cs_flags(const char *format, va_list args, t_list *l)
 	return (1);
 }
 
-static char				*creat_double_chr(long long order, long long mantis)
-{
-	char			*double_chr;
-	char			*chr_order;
-	char			*chr_mantis;
-	int				l_order;
-	int				l_mantis;
+// static char				*creat_double_chr(long long order, char *mantis, int sign)
+// {
+// 	char			*double_chr;
+// 	char			*chr_order;
+// 	int				l_order;
+// 	int				l_mantis;
 
-	chr_order = ft_itoa(order);
-	chr_mantis = ft_itoa(mantis);
-	if (!chr_order || !chr_mantis)
-		return (NULL);
-	l_order = ft_strlen(chr_order);
-	l_mantis = ft_strlen(chr_mantis);
-	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + 1))))
-		return (NULL);
-	double_chr[l_order + 1] = '\0';
-	double_chr = ft_strcpy(double_chr, chr_order);
-	double_chr[l_order] = '.';
-	double_chr = ft_strcat(double_chr, chr_mantis);
-	return (double_chr);
+// 	chr_order = ft_itoa(order);
+// 	if (!chr_order)
+// 		return (NULL);
+// 	l_order = ft_strlen(chr_order);
+// 	l_mantis = ft_strlen(mantis);
+// 	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + sign + 1))))
+// 		return (NULL);
+// 	double_chr[l_order + 1] = '\0';
+// 	if (sign == 1)
+// 	{
+// 		*double_chr = '-';
+// 		double_chr[1] = '\0';
+// 		l_order++;
+// 	}
+// 	double_chr = ft_strcat(double_chr, chr_order);
+// 	double_chr[l_order] = '.';
+// 	double_chr[l_order + 1] = '\0';
+// 	double_chr = ft_strcat(double_chr, mantis);
+// 	return (double_chr);
+// }
+
+// static char					*creat_mantis(long double f, int precision)
+// {
+// 	char					*mantis;
+// 	char					*ptr;
+// 	double					f_ptr;
+// 	int						i;
+
+// 	i = 0;
+// 	f -= (long long)f;
+// 	mantis = (char*)malloc(sizeof(char) * (precision + 1));
+// 	while (i <= precision)
+// 	{
+// 		f *= 10;
+// 		ptr = ft_itoa((long long)f);
+// 		mantis[i++] = *ptr;
+// 		free(ptr);
+// 		f -= (long long)f;
+// 	}
+// 	mantis[i] = '\0';
+// 	return (mantis);
+// }
+
+// static void					mantis_rounding(t_list *l, char **mantis)
+// {
+// 	int						i;
+// 	int						up;
+
+// 	up = ((*mantis)[l->precision] >= 53) ? 1 : 0;
+// 	i = l->precision - 1;
+// 	while (up > 0)
+// 	{
+// 		if ((*mantis)[i] >= 48 && (*mantis)[i] < 57)
+// 		{
+// 			(*mantis)[i] += 1;
+// 			up = 0;
+// 		}
+// 		else if ((*mantis)[i] == 57)
+// 		{
+// 			(*mantis)[i] = 48;
+// 			up++;
+// 		}
+// 		i--;
+// 	}
+// 	(*mantis)[l->precision] = '\0';
+// }
+
+// static long long			*long_long_mult(t_num_parts *digits)
+// {
+// 	long long				*a;
+
+// 	a = (long long*)malloc(sizeof(long long));
+// 	return (a);
+// }
+
+// static t_num_parts			*new_short(int e, char *mantis)
+// {
+// 	t_num_parts				*ptr;
+// 	int						i;
+
+// 	i = 0;
+// 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
+// 	if (!ptr)
+// 		return (NULL);
+// 	ptr->num_part = (unsigned long long*)malloc(sizeof(unsigned long long));
+// 	if (!(ptr->num_part))
+// 		return (NULL);
+// 	while (e >= 0)
+// 	{
+// 		if (mantis[i++] == '1')
+// 			*(ptr->num_part) += to_power(2, e--);
+// 	}
+// 	return (ptr);
+// }
+
+// static t_num_parts			*new_ll(int e)
+// {
+// 	t_num_parts				*l;
+// 	const char				*ll_int;
+// 	int						last_power;
+// 	int						count;
+// 	int						i;
+
+// 	i = 0;
+// 	ptr = NULL;
+// 	ll_int = "4294967296";
+// 	l = (t_num_parts*)malloc(sizeof(t_num_parts));
+// 	count = 0;
+// 	while (e >= 32)
+// 	{
+// 		e -= 32;
+// 		count++;
+// 	}
+// 	last_power = (mod_compair(e, 0) != 0) ? 1 : 0;
+// 	l->num_part = (unsigned long long*)malloc(sizeof(unsigned long long) * (count + last_power));
+// 	while(i < count)
+// 	{
+// 		while (ll_int[i])
+// 		{
+			
+// 			l->num_part[i++] = to_power(2, 32);
+// 		}
+// 	}
+// 	if (e > 0)
+// 		l->num_part[i] = to_power(2, e);
+// 	return (l);
+// }
+
+static int					size_int_mass(int *a)
+{
+	int						i;
+
+	i = 0;
+	while (a[i])
+		i++;
+	return (i - 1);
 }
 
-static int					mantis_rounding(t_list *l, int mantis)
+static int					integer_size(unsigned long long num)
 {
-	int						save;
-	
-	save = mantis;
+	int						count;
+
+	count = 0;
+	while (num > 0)
+	{
+		num /= 10;
+		count++;
+	}
+	return (count);
+}
+
+static int					*long_multi(int *a, int *b)
+{
+	unsigned long long		cr;
+	long long				result[20];
+	int						power;
+	int						k;
+	int						a_size;
+	int						b_size;
+	int						i;
+	int						j;
+
+	i = 0;
+	j = 0;
+	k = 0;
+	a_size = size_int_mass(a);
+	b_size = size_int_mass(b);
+	while (i < 20)
+		result[i++] = 0;
+	i = 0;
+	while (i < a_size)
+	{
+		while (j < b_size)
+		{
+			cr = a[i] * b[j];
+			k = i + j;
+			{
+				cr += result[k];
+				result[k] = cr % (10000);
+				cr /= (10000);
+				if (k > power)
+				{
+					power = k;
+					k++;
+				}
+			}
+			k++;
+			j++;
+		}
+		j = 0;
+		i++;
+	}
+}
+
+static void					multi_parts_num(t_num_parts ***num, int count)
+{
+	int						*a;
+	int						*b;
+	int						i;
+
+	i = 0;
+ 	a = long_multi((**num)->num_part[i], (**num)->num_part[i + 1]);
+	i++;
+	while (count > 0)
+	{
+		b = long_multi(a, (**num)->num_part[i + 1]);
+		free(a);
+		a = b;
+		i++;
+		count--;
+	}
+}
+
+static int					*by_rank(unsigned long long num)
+{
+	int					*result;
+	int					i;
+
+	i = 4;
+	result = (int*)malloc(sizeof(int) * integer_size(num));
+	while (num > 0)
+	{
+		result[i--] = num % 10000;
+		num /= 10000;
+	}
+	return(result);
+}
+
+static t_num_parts			*mantis_part_to_mult(int e)
+{
+	t_num_parts				*ptr;
+	int						i;
+
+	i = 0;
+	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
+	ptr->num_part = (int**)malloc(sizeof(int*) * (e / 64 + 1));
+	if (!(ptr) || !(ptr->num_part))
+		return (NULL);
+	while (e > 0)
+	{
+		if (e >= 64)
+		{
+			ptr->num_part[i++] = by_rank(18446744073709551615);
+			e -= 64;
+		}
+		else
+		{
+			ptr->num_part[i++] = by_rank(to_power(2, e));
+			e = 0;
+		}
+	}
+	ptr->size = i;
+	return (ptr);
+}
+
+static int					power_count(e)
+{
+	int						count;
+
+	count = 0;
+	while (e >= 32)
+	{
+		e -= 32;
+		count++;
+	}
+	if (e > 0)
+		count++;
+	return (count);
+}
+
+static void					add_to_string(int e, unsigned mantis_byte)
+{	
+	t_num_parts				**mant_exp;
+	char					*mantis;
+	int						count;
+	int						i;
+	int						j;
+
+	i = 63;
+	j = 0;
+	count = 0;
+	mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (power_count(e)));
+	mantis = (char*)malloc(sizeof(char) * 65);
+	while (i >= 0)
+	{
+		if (mantis_byte & 1)
+			mantis[i] = '1';
+		else
+			mantis[i] = '0';
+		mantis_byte >>= 1;
+		i--;
+	}
+	mantis[64] = '\0';
+	printf("%s", mantis);
+	i = 0;
+	while (i < 63)
+	{
+		if (mantis[i] == '1')
+			mant_exp[j++] = mantis_part_to_mult(e);
+		count++;
+		e--;
+		i++;
+	}
+	multi_parts_num(&mant_exp, count);
 }
 
 static int					output_f_flags(const char *format, va_list args, t_list *l, char *type)
 {
-	double			f;
-	long long		order;
-	long long		mantis;
-	char			*double_num;
-	int				length;
+	t_uni_dub				ptr;
+	long double				f;
+	char					*mantis;
+	char					*double_num;
+	int						length;
+	int						e;
+	int						sign;
+	int						i;
 
 	l->precision = (!l->precision) ? 6 : l->precision;
-	f = va_arg(args, double);
-	order = f;
-	mantis = (f - order) * to_power(10, l->precision);
-	(mantis < 0) ? mantis = -mantis : mantis;
-	mantis = mantis_rounding(l, mantis);
-	double_num = creat_double_chr(order, mantis);
-	if (!double_num)
-		return (-1);
-	length = ft_strlen(double_num);
-	chr_output(l, double_num, length, format);
-	free(double_num);
-	return (1);
-	
+	i = l->precision;
+	if (!(*type) || *type == 'l')
+		f = va_arg(args, double);
+	else if (*type == 'L')
+		f = va_arg(args, long double);
+	ptr.val = f;
+	sign = ptr.doub.sign;
+	e = ptr.doub.exp - 16383;
+	if (e >= 0)
+	{
+		add_to_string(e, ptr.doub.mantis);
+			// return (-1);
+	}
+	// f = (sign == 1) ? -f : f;
+ 	// mantis = creat_mantis(f, l->precision);
+	// mantis_rounding(l, &mantis);
+	// double_num = creat_double_chr((long long)f, mantis, sign);
+	// if (!double_num)
+	// 	return (-1);
+	// length = ft_strlen(double_num);
+	// chr_output(l, double_num, length, format);
+	// free(double_num);
+	// return (1);
 }
 
 static int					ft_flag_function_find(const char *format, va_list args, t_list *l, char *type)
@@ -682,7 +978,7 @@ static char				*type_define(int lon, int shor)
 {
 	char			*type;
 
-	if ((lon < 0 || shor < 0) || (lon == 2 && !shor))
+	if ((lon == -1 || shor == -1) || (lon == 2 && !shor))
 		type = "ll";
 	else if (lon == 1 && !shor)
 		type = "l";
@@ -690,6 +986,8 @@ static char				*type_define(int lon, int shor)
 		type = "h";
 	else if (!lon && shor == 2)
 		type = "hh";
+	else if (lon == -2)
+		type = "L";
 	return (type);
 }
 
@@ -700,23 +998,28 @@ static char				*type_parse(const char *format, t_list *l)
 	
 	lon = 0;
 	shor = 0;
-	while (ft_memchr("lh", format[l->i], 2))
+	while (ft_memchr("Llh", format[l->type], 3))
 	{
-		if (format[l->i] == 'l')
+		if (format[l->type] == 'l')
 			lon = (!lon) ? 1 : lon + 1;
-		else if (format[l->i] == 'h')
+		else if (format[l->type] == 'h')
 			shor = (!shor) ? 1 : shor + 1;
-		else if (format[l->i] == 'h' && lon)
+		else if (format[l->type] == 'h' && lon)
 		{
 			shor = -1;
 			break ;
 		}
-		else if (format[l->i] == 'l' && shor)
+		else if (format[l->type] == 'l' && shor)
 		{
 			lon = -1;
 			break ;
 		}
-		l->i++;
+		else if (format[l->type] == 'L' && format[l->flag] == 'f')
+		{
+			lon = -2;
+			break ;
+		}
+		l->type++;
 	}
 	return (type_define(lon, shor));
 }
@@ -781,14 +1084,14 @@ static int					pars_format(const char *format, t_list *l)
 	l->save = l->i;
 	while (format[l->save] != '%' && format[l->save] != '\n' && format[l->save])
 	{
-		if (!ft_memchr("diouxXscpf+-_. lh#", format[l->save], 18) && !ft_isnum(format[l->save], 112))
+		if (!ft_memchr("diouxXscpf+-_. Llh#", format[l->save], 19) && !ft_isnum(format[l->save], 112))
 			return (0);
 		if (ft_memchr("diouxXscpf", format[l->save], 10) && !(l->flag))
 		{
 			l->flag = l->save;
 			return (1);
 		}
-		else if (ft_memchr("lh", format[l->save], 2) && !(l->type))
+		else if (ft_memchr("Llh", format[l->save], 3) && !(l->type))
 			l->type = l->save;
 		flag_check(format, l);
 		l->save++;
@@ -805,8 +1108,7 @@ static int					specs_and_flags_fing(const char *format, va_list args, t_list *l)
 	res = pars_format(format, l);
 	if (res && l->flag)
 	{
-		l->i = l->type;
-		if (format [l->i] == 'l' || format[l->i] == 'h')
+		if (ft_memchr("Llh", format[l->type], 3))
 			type = type_parse(format, l);
 		else
 			type = "";
@@ -862,7 +1164,7 @@ int					ft_printf(const char *format, ...)
 			zero_flags(l);
 		}
 		else
-		{ 
+		{
 			write(1, &(format[l->i++]), 1);
 			l->count++;
 		}
@@ -876,10 +1178,9 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1 = 1;
 
-	count = ft_printf("{%f}{%lf}{%Lf}\n", 1.42, 1.42, 1.42l);
-	count1 = printf("{%f}{%lf}{%Lf}\n", 1.42, 1.42, 1.42l);
-	printf("%d\n", count);
-	printf("%d", count1);
+	count = ft_printf("{%f}\n", 1223498756823465892364875832476582734658763542353465.232834583764857235);
+	// printf("%d\n", ft_strlen("00010010001101000101011001111000100101110010011001110011010001010010100101100011010101001001001000110101010000100011100001001000001001010011010001100101.001000110101"));
+	// printf("{%f}\n", 12345678972673452963549235423848253465.235);
 	return (0);
 }
 
@@ -892,4 +1193,79 @@ int					main(int argc, char **argv)
 
 //Если все идут hhhhhhhh то вывод будет на ll
 //Если все идут llllllll то вывод будет на ll
-//Если все идут hhhlhllhh и все в этом роде то вывод будет на llg
+//Если все идут hhhlhllhh и все в этом роде то вывод будет на ll
+
+
+
+
+
+
+// static int					*long_multi(t_num_parts **exp_num, int order)
+// {
+// 	unsigned long long		cr;
+// 	long long				result[20];
+// 	int						power;
+// 	int						k;
+// 	int						i;
+// 	int						j;
+
+// 	i = 0;
+// 	j = 0;
+// 	k = 0;
+// 	while (i < 20)
+// 		result[i++] = 0;
+// 	i = 0;
+// 	while (i < (exp_num[order])->size)
+// 	{
+// 		while (j < (exp_num[order + 1])->size)
+// 		{
+// 			cr = ((exp_num[order])->num_part)[i] * ((exp_num[order + 1])->num_part)[j];
+// 			k = i + j;
+// 			{
+// 				cr += result[k];
+// 				result[k] = cr % (8589934592 - 1);
+// 				cr /= (8589934592 - 1);
+// 				if (k > power)
+// 				{
+// 					power = k;
+// 					k++;
+// 				}
+// 			}
+// 			k++;
+// 			j++;
+// 		}
+// 		j = 0;
+// 		i++;
+// 	}
+// }
+
+// static int					power_count(e)
+// {
+// 	int						count;
+
+// 	count = 0;
+// 	while (e >= 32)
+// 	{
+// 		e /= 32;
+// 		count++;
+// 	}
+// 	if (e > 0)
+// 		count++;
+// 	return (count);
+// }
+
+// static t_num_parts  		*to_base(unsigned long long massive)
+// {
+// 	t_num_parts 			*ptr;
+// 	int						i;
+
+// 	i = 0;
+// 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
+// 	while (massive > 0)
+// 	{
+// 		(ptr->num_part)[i++] = massive % (8589934592 - 1);
+// 		massive /= (8589934592 - 1);
+// 	}
+// 	ptr->size = i;
+// 	return (ptr);
+// }

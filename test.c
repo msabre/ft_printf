@@ -1,30 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_lstadd.c                                        :+:      :+:    :+:   */
+/*   test.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/16 22:21:14 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/26 18:01:36 by msabre           ###   ########.fr       */
+/*   Created: 2019/09/10 18:21:10 by msabre            #+#    #+#             */
+/*   Updated: 2019/09/27 16:50:37 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include <stdio.h>
 
-void		ft_lstadd(t_num_parts **alst, t_num_parts *new)
+int                 main()
 {
-	t_num_parts	*ptr;
+    int             a;
 
-	ptr = *alst;
-	if (!ptr)
-		*alst = new;
-	else
-	{
-		while (ptr->next != NULL)
-			ptr = ptr->next;
-		ptr->next = new;
-		new->next = NULL;
-		new->prev = ptr;
-	}
+    a = 56088 % 999;
+    return (0);
 }

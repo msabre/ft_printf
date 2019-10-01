@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/07 17:45:13 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/01 17:02:15 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,25 @@ typedef	struct			s_lfigure
 	struct s_lfigure	*next;
 	struct s_lfigure	*prev;
 }						t_lf;
+
+typedef struct			s_num_parts
+{
+	int					**num_part;
+	int					size;
+	struct s_num_parts	*next;
+	struct s_num_parts	*prev;
+}						t_num_parts;
+
+typedef union			s_uni_dub
+{
+	long double			val;
+	struct
+	{
+		unsigned long	mantis : 64;
+		unsigned		exp : 15;
+		unsigned		sign : 1;
+	}					doub;
+}						t_uni_dub;
 
 void					*ft_memset(void *b, int c, size_t len);
 void					ft_bzero(void *s, size_t n);
@@ -132,6 +151,6 @@ void					ft_lstdelone(t_list **alst, void (*del)(void*, size_t));
 void					ft_lstdel(t_lf **alst);
 void					ft_lstiter(t_list *lst, void (*f)(t_list *elem));
 t_list					*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
-void					ft_lstadd(t_lf **alst, t_lf *new);
+void					ft_lstadd(t_num_parts **alst, t_num_parts *new);
 
 #endif
