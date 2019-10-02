@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/01 21:08:09 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/02 20:56:24 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -718,7 +718,7 @@ static int					size_int_mass(int *a)
 	i = 0;
 	while (a[i])
 		i++;
-	return (i - 1);
+	return (i);
 }
 
 static int					integer_size(unsigned long long num)
@@ -734,78 +734,93 @@ static int					integer_size(unsigned long long num)
 	return (count);
 }
 
-static int					*long_multi(int *a, int *b)
+static int					*creat_res(int size)
 {
+	int						*result;
+	int						i;
+
+	i = 0;
+	result = (int*)malloc(sizeof(int) * size);
+	if (!result)
+		return (NULL);
+	while (i <= size)
+		result[i++] = 0;
+	return (result);
+}
+
+static int					*long_multi(int *a, int *b, int a_size, int b_size)
+{
+	int 					*result;
 	unsigned long long		cr;
-	long long				result[20];
-	int						power;
 	int						k;
-	int						a_size;
-	int						b_size;
 	int						i;
 	int						j;
 
 	i = 0;
-	j = 0;
-	k = 0;
-	a_size = size_int_mass(a);
-	b_size = size_int_mass(b);
-	while (i < 20)
-		result[i++] = 0;
-	i = 0;
+	if (!(result = creat_res(a_size + b_size)))
+		return (NULL);
 	while (i < a_size)
 	{
+		j = 0;
 		while (j < b_size)
 		{
 			cr = a[i] * b[j];
 			k = i + j;
+			while (cr > 0)
 			{
 				cr += result[k];
 				result[k] = cr % (10000);
 				cr /= (10000);
-				if (k > power)
-				{
-					power = k;
-					k++;
-				}
+				k++;
 			}
-			k++;
 			j++;
 		}
-		j = 0;
 		i++;
 	}
+	return (result);
 }
 
-static void					multi_parts_num(t_num_parts ***num, int count)
+static int					multi_parts_num(t_num_parts ***num, int count)
 {
 	int						*a;
 	int						*b;
 	int						i;
+	int						size;
 
-	i = 0;
- 	a = long_multi((**num)->num_part[i], (**num)->num_part[i + 1]);
-	i++;
-	while (count > 0)
+	while (count >= 0)
 	{
-		b = long_multi(a, (**num)->num_part[i + 1]);
-		free(a);
-		a = b;
+		i = 0;
+		a = long_multi(((*num)[count])->num_part[i], ((*num)[count])->num_part[i + 1],
+			size_int_mass(((*num)[count])->num_part[i]), size_int_mass(((*num)[count])->num_part[i + 1]));
 		i++;
+		while (((*num)[count])->size > 2 && ((*num)[count])->num_part[i + 1] != NULL)
+		{
+			b = long_multi(a, ((*num)[count])->num_part[i + 1], size_int_mass(a),
+				size_int_mass(((*num)[count])->num_part[i + 1]));
+			free(a);
+			a = b;
+			i++;
+		}
+		size = size_int_mass(a) - 1;
+		while (size >= 0)
+			printf("%d", a[size--]);
+		printf("\n");
+		free(a);
 		count--;
 	}
+	return (1);
 }
 
 static int					*by_rank(unsigned long long num)
 {
 	int					*result;
-	int					i;
+	int					i;	
 
-	i = 4;
+	i = 0;
 	result = (int*)malloc(sizeof(int) * integer_size(num));
 	while (num > 0)
 	{
-		result[i--] = num % 10000;
+		result[i++] = num % 10000;
 		num /= 10000;
 	}
 	return(result);
@@ -843,9 +858,9 @@ static int					power_count(e)
 	int						count;
 
 	count = 0;
-	while (e >= 32)
+	while (e >= 64)
 	{
-		e -= 32;
+		e -= 64;
 		count++;
 	}
 	if (e > 0)
@@ -864,29 +879,31 @@ static void					add_to_string(int e, unsigned mantis_byte)
 	i = 63;
 	j = 0;
 	count = 0;
-	mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (power_count(e)));
 	mantis = (char*)malloc(sizeof(char) * 65);
 	while (i >= 0)
 	{
 		if (mantis_byte & 1)
+		{
 			mantis[i] = '1';
+			count++;
+		}
 		else
 			mantis[i] = '0';
 		mantis_byte >>= 1;
 		i--;
 	}
 	mantis[64] = '\0';
-	printf("%s", mantis);
 	i = 0;
+	mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1));
+	mant_exp[count] = NULL;
 	while (i < 63)
 	{
 		if (mantis[i] == '1')
 			mant_exp[j++] = mantis_part_to_mult(e);
-		count++;
 		e--;
 		i++;
 	}
-	multi_parts_num(&mant_exp, count);
+	multi_parts_num(&mant_exp, j - 1);
 }
 
 static int					output_f_flags(const char *format, va_list args, t_list *l, char *type)
@@ -1178,7 +1195,7 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1 = 1;
 
-	count = ft_printf("{%f}\n", 1223498756823465892364875832476582734658763542353465.232834583764857235);
+	count = ft_printf("%f\n", 1223498756823465892364875832476582734658763542353465.232834583764857235);
 	// printf("%d\n", ft_strlen("00010010001101000101011001111000100101110010011001110011010001010010100101100011010101001001001000110101010000100011100001001000001001010011010001100101.001000110101"));
 	// printf("{%f}\n", 12345678972673452963549235423848253465.235);
 	return (0);
@@ -1194,78 +1211,3 @@ int					main(int argc, char **argv)
 //Если все идут hhhhhhhh то вывод будет на ll
 //Если все идут llllllll то вывод будет на ll
 //Если все идут hhhlhllhh и все в этом роде то вывод будет на ll
-
-
-
-
-
-
-// static int					*long_multi(t_num_parts **exp_num, int order)
-// {
-// 	unsigned long long		cr;
-// 	long long				result[20];
-// 	int						power;
-// 	int						k;
-// 	int						i;
-// 	int						j;
-
-// 	i = 0;
-// 	j = 0;
-// 	k = 0;
-// 	while (i < 20)
-// 		result[i++] = 0;
-// 	i = 0;
-// 	while (i < (exp_num[order])->size)
-// 	{
-// 		while (j < (exp_num[order + 1])->size)
-// 		{
-// 			cr = ((exp_num[order])->num_part)[i] * ((exp_num[order + 1])->num_part)[j];
-// 			k = i + j;
-// 			{
-// 				cr += result[k];
-// 				result[k] = cr % (8589934592 - 1);
-// 				cr /= (8589934592 - 1);
-// 				if (k > power)
-// 				{
-// 					power = k;
-// 					k++;
-// 				}
-// 			}
-// 			k++;
-// 			j++;
-// 		}
-// 		j = 0;
-// 		i++;
-// 	}
-// }
-
-// static int					power_count(e)
-// {
-// 	int						count;
-
-// 	count = 0;
-// 	while (e >= 32)
-// 	{
-// 		e /= 32;
-// 		count++;
-// 	}
-// 	if (e > 0)
-// 		count++;
-// 	return (count);
-// }
-
-// static t_num_parts  		*to_base(unsigned long long massive)
-// {
-// 	t_num_parts 			*ptr;
-// 	int						i;
-
-// 	i = 0;
-// 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
-// 	while (massive > 0)
-// 	{
-// 		(ptr->num_part)[i++] = massive % (8589934592 - 1);
-// 		massive /= (8589934592 - 1);
-// 	}
-// 	ptr->size = i;
-// 	return (ptr);
-// }
