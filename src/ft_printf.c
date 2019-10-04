@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/03 17:23:30 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/04 21:22:54 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -716,9 +716,22 @@ static int					size_int_mass(int *a)
 	int						i;
 
 	i = 0;
-	while (a[i])
+	while (a[i] >= 0)
 		i++;
 	return (i);
+}
+
+static int							power_count(int e)
+{
+	int						count;
+
+	count = 0;
+	while (e > 0)
+	{
+		e /= 10;
+		count++;
+	}
+	return (count);
 }
 
 static int					integer_size(unsigned long long num)
@@ -734,20 +747,80 @@ static int					integer_size(unsigned long long num)
 	return (count);
 }
 
-static char					*get_bn_str(int **parts)
+static int					*add_ll_parts(int *a, int *b, int a_size, int b_size)
 {
-	char					*result;
-	int						*carry;
+	int						*result;
+	int						carry;
+	int						count;
 	int						i;
 
 	i = 0;
-	while (result(i + 1) != NULL)
+	if (a_size > b_size)
+		count = a_size + 1;
+	else
+		count = b_size + 1;
+	if (!(result = (int*)malloc(sizeof(int) * count)))
+		return (NULL);
+	while (i < count)
 	{
-		carry = add_ll_parts(result[i], result[i + 1], size_int_mass(result[i]),
-			size_int_mass(result[i + 1]));
-		
+		carry += a[i] + b[i];
+		result[i] = carry / 10;
+		carry %= 10;
+		i++;
 	}
 	return (result);
+}
+
+static char		 			*get_bn_str(int **result)
+{
+	int						*a;
+	int						*b;
+	char					*str;
+	int						*carry;
+	int						*save_num;
+	int						count;
+	int						i;
+	int						j;
+
+	a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
+			size_int_mass(result[1]));
+	i = 2;
+	while (result[i] != NULL)
+	{
+		b = add_ll_parts(a, result[i], size_int_mass(a),
+			size_int_mass(result[i]));
+		free(a);
+		a = b;
+		i++;
+	}
+	count =	size_int_mass(a) - 1;
+	if (!(str = (char*)malloc(sizeof(char) * (count))))
+		return (NULL);
+	// while (count >= 0)
+	// {
+	// 	if (save_num[count] < 1000)
+	// 	{
+	// 		j = 4 - power_count(save_num[count]);
+	// 		a = j;
+	// 		i += j;
+	// 		while (j)
+	// 		{
+	// 			str[i - j] = '0';
+	// 			j--;
+	// 		}
+	// 		i += 4 - a - 1;
+	// 	}
+	// 	else
+	// 		i += 3;
+	// 	while (save_num[count] > 0)
+	// 	{
+	// 		str[i--] = save_num[count] % 1000 + 48;
+	// 		save_num[count] /= 1000;
+	// 	}
+	// 	count--;
+	// }
+	// str[i] = '\0';
+	return (str);
 }
 
 static int					*creat_res(int size)
@@ -769,26 +842,34 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 	unsigned long long		cur;
 	unsigned long long		cr;
 	int 					*result;
+	int						c[526];
 	int						i;
 	int						j;
 
 	i = 0;
-	if (!(result = creat_res(a_size + b_size)))
+	if (!(result = creat_res(a_size + b_size + 1)))
 		return (NULL);
+	result[a_size + b_size] = -1;
 	while (i < a_size)
 	{
 		j = 0;
 		cr = 0;
 		while (j < b_size || cr)
 		{
-			cur = result[i + j] + a[i] * (j < b_size ? b[j] : 0) + cr;
-			result[i + j] = cur % 10000;
-			cr = cur / 10000;
+
+			cur = c[i + j] + a[i] * (j < b_size ? b[j] : 0) + cr;
+			c[i + j] = cur % 10;
+			cr = cur / 10;
 			j++;
 		}
 		i++;
 	}
 	i = 0;
+	j = 0;
+	while (c[i] == 0)
+		i++;
+	while (i < (a_size + b_size - 1))
+		result[j++] = c[i++];
 	return (result);
 }
 
@@ -799,11 +880,12 @@ static int					**get_bignum(t_num_parts ***num, int count)
 	int						*b;
 	int						i;
 	int						j;
+	int						size;
 
-	if (!(result = (int**)malloc(sizeof(int*) * (count + 1))))
+	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
 		return (NULL);
 	j = 0;
-	result[count] = NULL;
+	result[count + 1] = NULL;
 	while (count >= 0)
 	{
 		i = 0;
@@ -820,10 +902,13 @@ static int					**get_bignum(t_num_parts ***num, int count)
 			if (!b)
 				return (NULL);
 			a = b;
-			result[j++] = a;
 			i++;
 		}
-		free(a);
+		size = size_int_mass(a) - 1;
+		while (size > 0)
+			printf("%d", a[size--]);
+		printf("\n");
+		result[j++] = a;
 		count--;
 	}
 	return (result);
@@ -835,12 +920,13 @@ static int					*by_rank(unsigned long long num)
 	int					i;	
 
 	i = 0;
-	result = (int*)malloc(sizeof(int) * integer_size(num));
+	result = (int*)malloc(sizeof(int) * (integer_size(num) + 1));
 	while (num > 0)
 	{
-		result[i++] = num % 10000;
-		num /= 10000;
+		result[i++] = num % 10;
+		num /= 10;
 	}
+	result[i] = -1;
 	return(result);
 }
 
@@ -869,21 +955,6 @@ static t_num_parts			*mantis_part_to_mult(int e)
 	}
 	ptr->size = i;
 	return (ptr);
-}
-
-static int					power_count(e)
-{
-	int						count;
-
-	count = 0;
-	while (e >= 64)
-	{
-		e -= 64;
-		count++;
-	}
-	if (e > 0)
-		count++;
-	return (count);
 }
 
 static char					*add_to_string(int e, unsigned mantis_byte)
@@ -1219,8 +1290,7 @@ int					main(int argc, char **argv)
 
 	count = 15 % 10000;
 	count = ft_printf("%f\n", 1223498756823465892364875832476582734658763542353465.232834583764857235);
-	// printf("%d\n", ft_strlen("00010010001101000101011001111000100101110010011001110011010001010010100101100011010101001001001000110101010000100011100001001000001001010011010001100101.001000110101"));
-	// printf("{%f}\n", 12345678972673452963549235423848253465.235);
+	printf("\n%f", 1223498756823465892364875832476582734658763542353465.232834583764857235);
 	return (0);
 }
 
