@@ -6,11 +6,12 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/04 21:22:54 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/07 19:54:08 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
+#include <float.h>
 
 static int						ft_isnum(char c, int exception)
 {
@@ -721,19 +722,6 @@ static int					size_int_mass(int *a)
 	return (i);
 }
 
-static int							power_count(int e)
-{
-	int						count;
-
-	count = 0;
-	while (e > 0)
-	{
-		e /= 10;
-		count++;
-	}
-	return (count);
-}
-
 static int					integer_size(unsigned long long num)
 {
 	int						count;
@@ -747,82 +735,6 @@ static int					integer_size(unsigned long long num)
 	return (count);
 }
 
-static int					*add_ll_parts(int *a, int *b, int a_size, int b_size)
-{
-	int						*result;
-	int						carry;
-	int						count;
-	int						i;
-
-	i = 0;
-	if (a_size > b_size)
-		count = a_size + 1;
-	else
-		count = b_size + 1;
-	if (!(result = (int*)malloc(sizeof(int) * count)))
-		return (NULL);
-	while (i < count)
-	{
-		carry += a[i] + b[i];
-		result[i] = carry / 10;
-		carry %= 10;
-		i++;
-	}
-	return (result);
-}
-
-static char		 			*get_bn_str(int **result)
-{
-	int						*a;
-	int						*b;
-	char					*str;
-	int						*carry;
-	int						*save_num;
-	int						count;
-	int						i;
-	int						j;
-
-	a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
-			size_int_mass(result[1]));
-	i = 2;
-	while (result[i] != NULL)
-	{
-		b = add_ll_parts(a, result[i], size_int_mass(a),
-			size_int_mass(result[i]));
-		free(a);
-		a = b;
-		i++;
-	}
-	count =	size_int_mass(a) - 1;
-	if (!(str = (char*)malloc(sizeof(char) * (count))))
-		return (NULL);
-	// while (count >= 0)
-	// {
-	// 	if (save_num[count] < 1000)
-	// 	{
-	// 		j = 4 - power_count(save_num[count]);
-	// 		a = j;
-	// 		i += j;
-	// 		while (j)
-	// 		{
-	// 			str[i - j] = '0';
-	// 			j--;
-	// 		}
-	// 		i += 4 - a - 1;
-	// 	}
-	// 	else
-	// 		i += 3;
-	// 	while (save_num[count] > 0)
-	// 	{
-	// 		str[i--] = save_num[count] % 1000 + 48;
-	// 		save_num[count] /= 1000;
-	// 	}
-	// 	count--;
-	// }
-	// str[i] = '\0';
-	return (str);
-}
-
 static int					*creat_res(int size)
 {
 	int						*result;
@@ -832,9 +744,78 @@ static int					*creat_res(int size)
 	result = (int*)malloc(sizeof(int) * size);
 	if (!result)
 		return (NULL);
-	while (i <= size)
+	while (i < size)
 		result[i++] = 0;
 	return (result);
+}
+
+static int					*add_ll_parts(int *a, int *b, int a_size, int b_size)
+{
+	int						*result;
+	int						carry;
+	int						count;
+	int						i;
+
+	i = 0;
+	carry = 0;
+	if (a_size > b_size)
+		count = a_size;
+	else
+		count = b_size;
+	if (!(result = creat_res(count + 2)))
+		return (NULL);
+	while (i < count || carry)
+	{
+		carry += (i < a_size ? a[i] : 0) + (i < b_size ? b[i] : 0);
+		result[i] = carry % 10;
+		carry /= 10;
+		i++;
+	}
+	result[i] = -1;
+	return (result);
+}
+
+static char					*str_fr_intmass(int	*a, int size)
+{
+	char					*str;
+	int						i;
+
+	i = 0;
+	if (!(str = (char*)malloc(sizeof(char) * (size + 1))))
+		return (NULL);
+	size -= 1;
+	while (size >= 0)
+		str[i++] = a[size--] + 48;
+	str[i] = '\0';
+	printf("%s\n", str);
+	return (str);
+}
+
+static char		 			*get_bn_str(int **result)
+{
+	int						*a;
+	int						*b;
+	char					*str;
+	int						i;
+
+	a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
+			size_int_mass(result[1]));
+	if (!a)
+		return (NULL);
+	i = 2;
+	while (result[i] != NULL)
+	{
+		b = add_ll_parts(a, result[i], size_int_mass(a), size_int_mass(result[i]));
+		if (!b)
+			return (NULL);
+		free(a);
+		a = b;
+		i++;
+	}
+	if (!(str = str_fr_intmass(a, size_int_mass(a))))
+		return (NULL);
+	free(a);
+	return (str);
 }
 
 static int					*long_multi(int *a, int *b, int a_size, int b_size)
@@ -842,14 +823,16 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 	unsigned long long		cur;
 	unsigned long long		cr;
 	int 					*result;
-	int						c[526];
+	int						c[1024];
 	int						i;
 	int						j;
 
 	i = 0;
+	while (i < (a_size + b_size + 1))
+		c[i++] = 0;
 	if (!(result = creat_res(a_size + b_size + 1)))
 		return (NULL);
-	result[a_size + b_size] = -1;
+	i = 0;
 	while (i < a_size)
 	{
 		j = 0;
@@ -864,12 +847,16 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 		}
 		i++;
 	}
-	i = 0;
+	i = a_size + b_size - 1;
 	j = 0;
 	while (c[i] == 0)
-		i++;
-	while (i < (a_size + b_size - 1))
-		result[j++] = c[i++];
+		i--;
+	while (j <= i)
+	{
+		result[j] = c[j];
+		j++;
+	}
+	result[i + 1] = -1;
 	return (result);
 }
 
@@ -880,12 +867,10 @@ static int					**get_bignum(t_num_parts ***num, int count)
 	int						*b;
 	int						i;
 	int						j;
-	int						size;
 
 	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
 		return (NULL);
 	j = 0;
-	result[count + 1] = NULL;
 	while (count >= 0)
 	{
 		i = 0;
@@ -904,23 +889,26 @@ static int					**get_bignum(t_num_parts ***num, int count)
 			a = b;
 			i++;
 		}
-		size = size_int_mass(a) - 1;
-		while (size > 0)
-			printf("%d", a[size--]);
-		printf("\n");
 		result[j++] = a;
 		count--;
 	}
+	result[j] = NULL;
 	return (result);
 }
 
-static int					*by_rank(unsigned long long num)
+static int					*by_rank(unsigned long long int num)
 {
 	int					*result;
 	int					i;	
 
 	i = 0;
-	result = (int*)malloc(sizeof(int) * (integer_size(num) + 1));
+	if (!(result = (int*)malloc(sizeof(int) * (integer_size(num) + 1))))
+		return (NULL);
+	if (num == 18446744073709551615)
+	{
+		result[i++] = 6;
+		num /= 10;
+	}
 	while (num > 0)
 	{
 		result[i++] = num % 10;
@@ -937,7 +925,7 @@ static t_num_parts			*mantis_part_to_mult(int e)
 
 	i = 0;
 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
-	ptr->num_part = (int**)malloc(sizeof(int*) * (e / 64 + 1));
+	ptr->num_part = (int**)malloc(sizeof(int*) * (e / 64 + 2));
 	if (!(ptr) || !(ptr->num_part))
 		return (NULL);
 	while (e > 0)
@@ -954,10 +942,35 @@ static t_num_parts			*mantis_part_to_mult(int e)
 		}
 	}
 	ptr->size = i;
+	ptr->num_part[i] = NULL;
 	return (ptr);
 }
 
-static char					*add_to_string(int e, unsigned mantis_byte)
+static int					get_binary(char **src, unsigned long a, int byte_count)
+{
+	int						i;
+	int						count;
+
+	i = byte_count - 1;
+	(*src)[0] = '1';
+	count = 1;
+	while (i > 0)
+	{
+		if (a & 1)
+		{
+			(*src)[i] = '1';
+			count++;
+		}
+		else
+			(*src)[i] = '0';
+		a >>= 1;
+		i--;
+	}
+	(*src)[byte_count] = '\0';
+	return (count);
+}
+
+static char					*add_to_string(int e, unsigned long mantis_byte)
 {	
 	t_num_parts				**mant_exp;
 	char					*mantis;
@@ -966,29 +979,15 @@ static char					*add_to_string(int e, unsigned mantis_byte)
 	int						i;
 	int						j;
 
-	i = 63;
 	j = 0;
-	count = 0;
+	i = 0;
 	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
 		return (NULL);
-	while (i >= 0)
-	{
-		if (mantis_byte & 1)
-		{
-			mantis[i] = '1';
-			count++;
-		}
-		else
-			mantis[i] = '0';
-		mantis_byte >>= 1;
-		i--;
-	}
-	mantis[64] = '\0';
-	i = 0;
+	count = get_binary(&mantis, mantis_byte, 64);
 	if (!(mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1))))
 		return (NULL);
 	mant_exp[count] = NULL;
-	while (i < 63)
+	while (i <= 63)
 	{
 		if (mantis[i] == '1')
 			mant_exp[j++] = mantis_part_to_mult(e);
@@ -1019,11 +1018,8 @@ static int					output_f_flags(const char *format, va_list args, t_list *l, char 
 	ptr.val = f;
 	sign = ptr.doub.sign;
 	e = ptr.doub.exp - 16383;
-	if (e >= 0)
-	{
+	if (e >= 64)
 		add_to_string(e, ptr.doub.mantis);
-			// return (-1);
-	}
 	// f = (sign == 1) ? -f : f;
  	// mantis = creat_mantis(f, l->precision);
 	// mantis_rounding(l, &mantis);
@@ -1288,9 +1284,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1 = 1;
 
-	count = 15 % 10000;
-	count = ft_printf("%f\n", 1223498756823465892364875832476582734658763542353465.232834583764857235);
-	printf("\n%f", 1223498756823465892364875832476582734658763542353465.232834583764857235);
+	count = ft_printf("%f", 2837468738724658972364875628734658723648956238465892364589623847659263486283648923648726348762387462873648263894628364826387462387648263489623846287364892364283746879263486283648923648726348762387462873648263894628364826387462387648263489623846287364892364.1234);
+	printf("%f", 2837468738724658972364875628734658723648956238465892364589623847659263486283648923648726348762387462873648263894628364826387462387648263489623846287364892364283746879263486283648923648726348762387462873648263894628364826387462387648263489623846287364892364.1234);
 	return (0);
 }
 
