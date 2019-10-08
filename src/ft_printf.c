@@ -6,12 +6,11 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/07 23:09:19 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/08 17:22:29 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
-#include <float.h>
 
 static int						ft_isnum(char c, int exception)
 {
@@ -577,6 +576,21 @@ static int					output_cs_flags(const char *format, va_list args, t_list *l)
 	return (1);
 }
 
+static void					*free_doub_lvl_mass(void **mas)
+{
+	char					**ptr;
+	int						i;
+
+	i = 0;
+	if (!mas)
+		return (NULL);
+	ptr = (char**)mas;
+	while (ptr[i] != NULL)
+		free(ptr[i++]);
+	free(ptr);
+	return ("gg");
+}
+
 static int					size_int_mass(int *a)
 {
 	int						i;
@@ -646,6 +660,8 @@ static char					*str_fr_intmass(int	*a, int size)
 	int						i;
 
 	i = 0;
+	if (!a)
+		return (NULL);
 	if (!(str = (char*)malloc(sizeof(char) * (size + 1))))
 		return (NULL);
 	size -= 1;
@@ -661,24 +677,32 @@ static char		 			*get_bn_str(int **result)
 	int						*b;
 	char					*str;
 	int						i;
-
-	a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
-			size_int_mass(result[1]));
-	if (!a)
+	
+	if (!result)
 		return (NULL);
+	if (!(a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
+		size_int_mass(result[1]))))
+	{
+		free_doub_lvl_mass((void**)result);
+		return (NULL);
+	}
 	i = 2;
 	while (result[i] != NULL)
 	{
 		b = add_ll_parts(a, result[i], size_int_mass(a), size_int_mass(result[i]));
-		if (!b)
-			return (NULL);
 		free(a);
+		if (!b)
+		{
+			free_doub_lvl_mass((void**)result);
+			return (NULL);
+		}
 		a = b;
 		i++;
 	}
-	if (!(str = str_fr_intmass(a, size_int_mass(a))))
-		return (NULL);
+	str = str_fr_intmass(a, size_int_mass(a));
 	free(a);
+	if (!str)
+		return (NULL);
 	return (str);
 }
 
@@ -703,7 +727,6 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 		cr = 0;
 		while (j < b_size || cr)
 		{
-
 			cur = c[i + j] + a[i] * (j < b_size ? b[j] : 0) + cr;
 			c[i + j] = cur % 10;
 			cr = cur / 10;
@@ -734,6 +757,7 @@ static int					**get_bignum(t_num_parts ***num, int count)
 
 	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
 		return (NULL);
+	result[count + 1] = NULL;
 	j = 0;
 	while (count >= 0)
 	{
@@ -741,7 +765,10 @@ static int					**get_bignum(t_num_parts ***num, int count)
 		a = long_multi(((*num)[count])->num_part[i], ((*num)[count])->num_part[i + 1],
 			size_int_mass(((*num)[count])->num_part[i]), size_int_mass(((*num)[count])->num_part[i + 1]));
 		if (!a)
+		{
+			free_doub_lvl_mass((void**)result);
 			return (NULL);
+		}
 		i++;
 		while (((*num)[count])->size > 2 && ((*num)[count])->num_part[i + 1] != NULL)
 		{
@@ -749,14 +776,16 @@ static int					**get_bignum(t_num_parts ***num, int count)
 				size_int_mass(((*num)[count])->num_part[i + 1]));
 			free(a);
 			if (!b)
+			{
+				free_doub_lvl_mass((void**)result);
 				return (NULL);
+			}
 			a = b;
 			i++;
 		}
 		result[j++] = a;
 		count--;
 	}
-	result[j] = NULL;
 	return (result);
 }
 
@@ -785,11 +814,16 @@ static int					*by_rank(unsigned long long int num)
 static t_num_parts			*mantis_part_to_mult(int e)
 {
 	t_num_parts				*ptr;
+	int						count;
 	int						i;
 
 	i = 0;
+	if (e / 64 <= 0)
+		count = 2;
+	else if (e / 64 > 0)
+		count = e / 64 + 1;
 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
-	ptr->num_part = (int**)malloc(sizeof(int*) * (e / 64 + 2));
+	ptr->num_part = (int**)malloc(sizeof(int*) * (count + 1));
 	if (!(ptr) || !(ptr->num_part))
 		return (NULL);
 	while (e > 0)
@@ -803,6 +837,12 @@ static t_num_parts			*mantis_part_to_mult(int e)
 		{
 			ptr->num_part[i++] = by_rank(to_power(2, e));
 			e = 0;
+		}
+		if (!ptr->num_part[i - 1])
+		{
+			free_doub_lvl_mass((void**)(ptr->num_part));
+			free(ptr);
+			return (NULL);
 		}
 	}
 	ptr->size = i;
@@ -848,6 +888,15 @@ static char					*norm_chr_ll(long double f)
 	return (str);
 }
 
+static void					free_struct(t_num_parts **mant_exp)
+{
+	int						i;
+
+	i = 0;
+	while (mant_exp[i] != NULL)
+		free((mant_exp[i++])->num_part);
+	free(mant_exp);
+}
 
 static char					*add_to_string(int e, unsigned long mantis_byte, long double f)
 {	
@@ -860,23 +909,58 @@ static char					*add_to_string(int e, unsigned long mantis_byte, long double f)
 
 	j = 0;
 	i = 0;
-	if (e <= 64)
+	if (e < 64)
 		return (norm_chr_ll(f));
 	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
 		return (NULL);
 	count = get_binary(&mantis, mantis_byte);
 	if (!(mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1))))
+	{
+		free(mantis);
 		return (NULL);
+	}
 	mant_exp[count] = NULL;
 	while (i <= 63)
 	{
 		if (mantis[i] == '1')
-			mant_exp[j++] = mantis_part_to_mult(e);
+		{
+			if (!(mant_exp[j++] = mantis_part_to_mult(e)))
+			{
+				free(mantis);
+				return (NULL);
+			}
+		}
 		e--;
 		i++;
 	}
+	free(mantis);
 	result = get_bignum(&mant_exp, count - 1);
-	return (get_bn_str(result));
+	free_struct(mant_exp);
+	if (result[1] == NULL)
+		mantis = str_fr_intmass(*result, size_int_mass(*result));
+	else
+		mantis = get_bn_str(result);
+	free_doub_lvl_mass((void**)result);
+	return ((!mantis) ? NULL : mantis);
+}
+
+char	*ft_strcat1(char *s1, const char *s2)
+{
+	int i;
+	int len;
+
+	if (!(s1 || s2))
+		return (NULL);
+	i = 0;
+	len = ft_strlen(s1);
+	while (s2[i] != '\0')
+	{
+		s1[len] = s2[i];
+		len++;
+		i++;
+	}
+	s1[len] = '\0';
+	return (s1);
 }
 
 static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
@@ -884,24 +968,24 @@ static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
 	char			*double_chr;
 	int				l_order;
 	int				l_mantis;
+	int				i;
 
+	i = 0;
 	l_order = ft_strlen(chr_order);
 	l_mantis = ft_strlen(mantis);
 	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + sign + 1))))
 		return (NULL);
-	double_chr[l_order + 1] = '\0';
 	if (sign == 1)
 	{
-		*double_chr = '-';
-		double_chr[1] = '\0';
+		double_chr[0] = '-';
+		double_chr[++i] = '\0';
 		l_order++;
 	}
-	double_chr = ft_strcat(double_chr, chr_order);
-	double_chr[++l_order] = '.';
+	double_chr[i] = '\0';
+	ft_strcat1(double_chr, chr_order);
+	double_chr[l_order] = '.';
 	double_chr[l_order + 1] = '\0';
-	double_chr = ft_strcat(double_chr, mantis);
-	free(chr_order);
-	free(mantis);
+	ft_strcat1(double_chr, mantis);
 	return (double_chr);
 }
 
@@ -938,7 +1022,8 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 
 	i = 0;
 	f -= (long long)f;
-	fractional = (char*)malloc(sizeof(char) * (precision + 1));
+	if (!(fractional = (char*)malloc(sizeof(char) * (precision + 1))))
+		return (NULL);
 	while (i <= precision && e < 64)
 	{
 		f *= 10;
@@ -974,6 +1059,8 @@ static int					output_f_flags(const char *format, va_list args, t_list *l, char 
 		return (-1);
 	fractional = creat_after_dot(f, l->precision, l, ptr.doub.exp - 16383);
 	double_num = creat_double_chr(order, fractional, ptr.doub.sign);
+	free(fractional);
+	free(order);
 	if (!double_num)
 		return (-1);
 	length = ft_strlen(double_num);
@@ -1229,16 +1316,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1 = 1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1 = 1;
 
-	count = ft_printf("%.44f\n", 11112318273465876234856982364589762384658263452346582634523.1212123);
-	printf("%.44f", 11112318273465876234856982364589762384658263452346582634523.1212123);
-	return (0);
-}
+// 	count = ft_printf("{%f}{%lf}{%Lf}\n", -1.42, -1.42, -1.42l);
+// 	printf("{%f}{%lf}{%Lf}", -1.42, -1.42, -1.42l);
+// 	return (0);
+// }
 
+
+//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
@@ -1249,36 +1338,3 @@ int					main(int argc, char **argv)
 //Если все идут hhhhhhhh то вывод будет на ll
 //Если все идут llllllll то вывод будет на ll
 //Если все идут hhhlhllhh и все в этом роде то вывод будет на ll
-
-// static int					*long_multi(int *a, int *b, int a_size, int b_size)
-// {
-// 	int 					*result;
-// 	unsigned long long		cr;
-// 	int						k;
-// 	int						i;
-// 	int						j;
-
-// 	i = 0;
-// 	if (!(result = creat_res(a_size + b_size)))
-// 		return (NULL);
-// 	while (i < a_size)
-// 	{
-// 		j = 0;
-// 		while (j < b_size)
-// 		{
-// 			cr = a[i] * b[j];
-// 			k = i + j;
-// 			while (cr > 0)
-// 			{
-// 				cr += result[k];
-// 				result[k] = cr % (10000);
-// 				cr /= (10000);
-//         		k++;
-// 			}
-// 			j++;
-// 		}
-// 		i++;
-// 	}
-// 	i = 0;
-// 	return (result);
-// }
