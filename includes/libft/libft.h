@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/09 20:51:35 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/14 19:13:48 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,12 @@ typedef struct			s_list
 	int					precision;
 	int					out_length;
 	int					dop;
-	char				dop_mass[10];
+	char				*out;
+	char				dop_mass[10000];
 	char				spase;
+	char				*hash;
 	char				*buffer_for_write;
+	const char			*format;
 	void				*content;
 	size_t				content_size;
 	struct s_list		*next;
