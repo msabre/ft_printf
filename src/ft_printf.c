@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/15 19:54:33 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/15 20:42:06 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,7 +275,7 @@ static int					fill_output(t_list *l, char *result)
 	else
 		length = 0;
 	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += l->dop_count : 1;
-	while (length > 0 && l->spase == '0')
+	while (length > 0)
 	{
 		result[i++] = l->spase;
 		length--;
@@ -291,8 +291,8 @@ static int					fill_output(t_list *l, char *result)
 	}
 	if (l->length <= 0 && l->precision == 0)
 		i = (l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0;
-	else if (l->length > 0)
-		i += (l->length - l->out_length) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0);
+	else
+		i += (l->dop >= 0 && l->spase != '0') ? l->dop_count : 0;
 	if (l->dop != -2)
 		while (l->out[j])
 			result[i++] = (l)->out[j++];
@@ -317,7 +317,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->spase = '0';
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
-	if (mod_compair(l->out_length, l->precision) == 1 || mod_compair(l->length, l->precision) == 1)
+	if (mod_compair(l->out_length, l->precision) == 1)
 		l->precision = 0;
 	if (ft_memchr("xXo", l->format[l->flag], 3) || l->format[l->flag] == 'p')
 	{
@@ -1275,18 +1275,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 	
-	count = ft_printf("%010x", 542);
-	count1 = printf("%010x", 542);
+// 	count = ft_printf("%5.2s is a string\n", "this");
+// 	count1 = printf("%5.2s is a string\n", "this");
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
