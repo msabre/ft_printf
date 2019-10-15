@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/14 20:38:00 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/15 19:54:33 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,9 @@ static void					zero_flags(t_list *l)
 	l->fminus = 0;
 	l->fplus = -1;
 	l->length = 0;
-	l->precision = -1;
+	l->precision = 0;
 	l->dop = -1;
+	l->dop_count = 0;
 	l->hash = NULL;
 	l->out = NULL;
 	l->spase = ' ';
@@ -267,14 +268,14 @@ static int					fill_output(t_list *l, char *result)
 	i = 0;
 	j = 0;
 	(l->fplus >= 0) ? (l)->out[i++] = '+' : 0;
-	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash) : 0;
+	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
 	i = (l->length < 0) ? l->out_length : 0;
 	if (l->length != 0)
-		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - (l->dop >= 0 ? 2 : 0);
+		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count;
 	else
 		length = 0;
-	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += 2 : 1;
-	while (length > 0)
+	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += l->dop_count : 1;
+	while (length > 0 && l->spase == '0')
 	{
 		result[i++] = l->spase;
 		length--;
@@ -284,17 +285,19 @@ static int					fill_output(t_list *l, char *result)
 		i = (l->precision > 0) ? (l->dop >= 0 ? l->dop : 0) + ((l->length > 0 && l->length != 0) ? l->length : 0) : 0;
 		i = (l->precision < 0) ? (l->dop >= 0 ? l->dop : 0) + l->out_length : 0;
 		l->spase = (l->precision > 0) ? '0' : ' ';
-		while (l->precision-- > 0)
+		length = l->precision - l->out_length;
+		while (length-- > 0)
 			result[i++] = l->spase;
 	}
-	if (l->length <= 0)
-		i = (l->dop >= 0 && *(l->out) != 48) ? l->dop + 2 : 0;
+	if (l->length <= 0 && l->precision == 0)
+		i = (l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0;
+	else if (l->length > 0)
+		i += (l->length - l->out_length) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0);
+	if (l->dop != -2)
+		while (l->out[j])
+			result[i++] = (l)->out[j++];
 	else
-		i += (l->dop >= 0 && l->spase != '0') ? 2 : 0;
-	while ((l)->out[j])
-		result[i++] = (l)->out[j++];
-	if (l->dop == -2)
-		*result = '\0';
+		result[l->length] = '\0';
 	l->count += ft_strlen(result);
 	get_buffer(l, result);
 	return (1);
@@ -312,26 +315,38 @@ static char					*flag_inicializatian(t_list *l)
 		l->fzero = -1;
 	if (l->fzero > 0)
 		l->spase = '0';
-	if (mod_compair(l->out_length, l->precision) == 1)
+	if (mod_compair(l->precision, l->length) == 1)
+		l->length = 0;
+	if (mod_compair(l->out_length, l->precision) == 1 || mod_compair(l->length, l->precision) == 1)
 		l->precision = 0;
-	if ((l->fhash && ft_memchr("xXo", l->format[l->flag], 3)) || l->format[l->flag] == 'p')
+	if (ft_memchr("xXo", l->format[l->flag], 3) || l->format[l->flag] == 'p')
 	{
-		l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
-		if (l->precision == 0)
+		if (l->precision == 0 && l->dot && *(l->out) == '0')
 			l->dop = -2;
-		else if (l->spase == ' ' && (l->length > 0 || l->precision > 0))
-			l->dop = l->length - l->out_length - 2;
-		else
-			l->dop = 0;
+		else if (l->fhash && *(l->out) != '0')
+		{
+			if (l->format[l->flag] == 'o')
+				l->hash = "0";
+			else
+				l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
+			l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
+			if (l->spase == ' ' && (l->length > 0 || l->precision > 0))
+				l->dop = l->length - l->out_length - l->dop_count;
+			else
+				l->dop = 0;
+		}
 	}
-	if (mod_compair(l->length, l->out_length) == 1 && mod_compair(l->length, l->precision) == 1)
+	if (mod_compair(l->precision, l->length) == 1)
+		count_space = mod_minus(l->precision, l->out_length);
+	else if (mod_compair(l->length, l->out_length) == 1)
 	{
 		count_space = mod_minus(l->length, l->out_length);
-		count_space = (l->dop > 0) ? mod_minus(count_space, 2) : count_space;
+		count_space = (l->dop >= 0) ? mod_minus(count_space, l->dop_count) : count_space;
 	}
 	count_space *= (count_space < 0) ? -1 : 1;
-	result = (char*)malloc(sizeof(char) * (l->out_length + count_space + (l->dop >= 0 ? 2 : 0) + 1));
-	result[l->out_length + count_space + (l->dop >= 0 ? 2 : 0)] = '\0';
+	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count))))
+		return (NULL);
+	(l->dop >= 0) ? result[l->dop] = '\0' : 1;
 	return (result);
 }
 
@@ -467,7 +482,6 @@ static int						output_p_flags(va_list args,
 
 static int					output_cs_flags(va_list args, t_list *l)
 {
-	int				count;
 	char			*str;
 	char			c;
 
@@ -478,11 +492,10 @@ static int					output_cs_flags(va_list args, t_list *l)
 		if (str == NULL)
 			str = "(null)";
 		l->out_length = ft_strlen(str);
-		if (l->precision != 0)
+		if (l->dot && l->precision < l->out_length)
 		{
-			if (l->precision < count)
-				l->out_length = l->precision;
-			l->precision = 0;
+			str = ft_strndup(str, 0, l->precision - 1);
+			l->out_length -= l->precision;
 		}
 		else if (l->precision == 0 && l->dot != 0)
 			l->out_length = 0;
@@ -1016,6 +1029,7 @@ static int					unknow_output(t_list *l)
 		l->i = l->save;
 		l->i++;
 	}
+	l->out = out;
 	chr_output(l);
 	return (1);
 }
@@ -1266,14 +1280,13 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 	
-	count = ft_printf("@moulitest: %#.x %#.0x\n", 0, 0);
-	count1 = printf("@moulitest: %#.x %#.0x", 0, 0);
+	count = ft_printf("%010x", 542);
+	count1 = printf("%010x", 542);
 
 	// printf("%d\n", count);
 	// printf("%d", count1);
 	return (0);
 }
-
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста

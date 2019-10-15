@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/06 21:30:06 by msabre            #+#    #+#             */
-/*   Updated: 2019/09/25 18:00:06 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/15 17:05:58 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void		*ft_memalloc(size_t size)
 	if (!(ptr = (char*)malloc(sizeof(char) * (size + 1))))
 		return (NULL);
 	while (i < size)
-		ptr[i++] = '0';
+		ptr[i++] = ' ';
 	ptr[i] = '\0';
 	return (ptr);
 }
