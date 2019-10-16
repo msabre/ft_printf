@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/16 20:18:14 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/16 20:34:32 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -269,10 +269,16 @@ static int					fill_output(t_list *l, char *result)
 
 	i = 0;
 	j = 0;
-	(*(l->out) == '-' ) ? result[i++] = '-': 1;
+	minus = 0;
+	if (*(l->out) == '-' )
+	{
+		result[i++] = '-';
+		j++;
+		minus++;
+	}
 	(l->fplus > 0) ? result[i++] = '+' : 0;
 	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
-	i = l->fplus + l->sp + ((l->length < 0) ? l->out_length : 0);
+	i = minus + l->fplus + l->sp + ((l->length < 0) ? l->out_length : 0);
 	if (l->length != 0)
 		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp;
 	else
@@ -295,7 +301,7 @@ static int					fill_output(t_list *l, char *result)
 	if (l->cut_s == 1 && l->format[l->flag] == 's' && l->length > 0)
 		i += l->fplus + l->sp + l->length - l->out_length;
 	if (l->length <= 0 && l->precision == 0)
-		i = l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
+		i = minus + l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
 	else
 		i += l->sp + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0);
 	if (l->dop != -2)
