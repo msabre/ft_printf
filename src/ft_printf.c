@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/16 20:34:32 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/16 20:40:26 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,7 +270,7 @@ static int					fill_output(t_list *l, char *result)
 	i = 0;
 	j = 0;
 	minus = 0;
-	if (*(l->out) == '-' )
+	if (*(l->out) == '-' && l->spase == '0')
 	{
 		result[i++] = '-';
 		j++;
@@ -1292,18 +1292,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	count = ft_printf("%05d", -42);
-	count1 = printf("%05d", -42);
+// 	count = ft_printf("%5d\n", -42);
+// 	count1 = printf("%5d\n", -42);
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
