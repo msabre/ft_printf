@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/16 16:36:52 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/16 20:18:14 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,9 +83,10 @@ static void					zero_flags(t_list *l)
 	l->start = 0;
 	l->fzero = 0;
 	l->fminus = 0;
-	l->fplus = -1;
+	l->fplus = 0;
 	l->length = 0;
 	l->precision = 0;
+	l->cut_s = 0;
 	l->dop = -1;
 	l->dop_count = 0;
 	l->hash = NULL;
@@ -263,18 +264,20 @@ static int					fill_output(t_list *l, char *result)
 {
 	int						j;
 	int						i;
+	int						minus;
 	int						length;
 
 	i = 0;
 	j = 0;
-	(l->fplus >= 0) ? (l)->out[i++] = '+' : 0;
+	(*(l->out) == '-' ) ? result[i++] = '-': 1;
+	(l->fplus > 0) ? result[i++] = '+' : 0;
 	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
-	i = (l->length < 0) ? l->out_length : 0;
+	i = l->fplus + l->sp + ((l->length < 0) ? l->out_length : 0);
 	if (l->length != 0)
-		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count;
+		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp;
 	else
 		length = 0;
-	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += l->dop_count : 1;
+	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += l->sp + l->dop_count : 1;
 	while (length > 0)
 	{
 		result[i++] = l->spase;
@@ -282,19 +285,19 @@ static int					fill_output(t_list *l, char *result)
 	}
 	if (l->precision != 0)
 	{
-		i = (l->precision > 0) ? (l->dop >= 0 ? l->dop : 0) + ((l->length > 0) ? l->length : 0) : 0;
+		i = l->fplus + l->sp + ((l->precision > 0) ? (l->dop >= 0 ? l->dop : 0) + ((l->length > 0) ? l->length : 0) : 0);
 		i = (l->precision < 0) ? (l->dop >= 0 ? l->dop : 0) + l->out_length : 0;
 		l->spase = (l->precision > 0) ? '0' : ' ';
 		length = l->precision - l->out_length;
 		while (length-- > 0)
 			result[i++] = l->spase;
 	}
-	if (l->sp == 1 && l->format[l->flag] == 's' && l->length > 0)
-		i += l->length - l->out_length;
+	if (l->cut_s == 1 && l->format[l->flag] == 's' && l->length > 0)
+		i += l->fplus + l->sp + l->length - l->out_length;
 	if (l->length <= 0 && l->precision == 0)
-		i = (l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0;
+		i = l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
 	else
-		i += (l->dop >= 0 && l->spase != '0') ? l->dop_count : 0;
+		i += l->sp + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0);
 	if (l->dop != -2)
 		while (l->out[j])
 			result[i++] = (l)->out[j++];
@@ -317,27 +320,26 @@ static char					*flag_inicializatian(t_list *l)
 		l->fzero = -1;
 	if (l->fzero > 0)
 		l->spase = '0';
+	if (l->fplus > 0 && l->sp < 1)
+		l->out_length++;
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
 	if (mod_compair(l->out_length, l->precision) == 1)
 		l->precision = 0;
-	if (ft_memchr("xXo", l->format[l->flag], 3) || l->format[l->flag] == 'p')
+	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
 	{
-		if (l->precision == 0 && l->dot && *(l->out) == '0')
-			l->dop = -2;
-		else if (l->fhash && *(l->out) != '0')
-		{
-			if (l->format[l->flag] == 'o')
-				l->hash = "0";
-			else
-				l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
-			l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
-			if (l->spase == ' ' && (l->length > 0 || l->precision > 0))
-				l->dop = l->length - l->out_length - l->dop_count;
-			else
-				l->dop = 0;
-		}
+		if (l->format[l->flag] == 'o')
+			l->hash = "0";
+		else
+			l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
+		l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
+		if (l->spase == ' ' && l->length > 0 )
+			l->dop = l->length - l->out_length - l->dop_count;
+		else
+			l->dop = 0;
 	}
+	else if (l->precision == 0 && l->dot && *(l->out) == '0')
+		l->dop = -2;
 	if (mod_compair(l->precision, l->length) == 1)
 		count_space = mod_minus(l->precision, l->out_length);
 	else if (mod_compair(l->length, l->out_length) == 1)
@@ -346,6 +348,10 @@ static char					*flag_inicializatian(t_list *l)
 		count_space = (l->dop >= 0) ? mod_minus(count_space, l->dop_count) : count_space;
 	}
 	count_space *= (count_space < 0) ? -1 : 1;
+	if (l->sp && l->fplus <= 0 && *(l->out) != '-')
+		l->out_length++;
+	else
+		l->sp = 0;
 	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count))))
 		return (NULL);
 	(l->dop >= 0) ? result[l->dop] = '\0' : 1;
@@ -406,14 +412,7 @@ static int						output_di_flags(va_list args,
 	if (!d_chr)
 		return (-1);
 	l->out_length = ft_strlen(d_chr);
-	if ((l->fzero || (mod_compair(l->length, l->precision) == 1
-		&& mod_compair(l->precision, l->out_length) == 1)) && l->length > l->out_length
-			&& *d_chr == '-')
-	{
-		l->out_length--;
-		l->length--;
-		(l->precision == 0) ? l->count++ : l->count;
-	}
+	(l->fplus > 0 && *d_chr == '-') ? l->fplus = 0 : 1;
 	l->out = d_chr;
 	chr_output(l);
 	return (1);
@@ -456,6 +455,8 @@ static int						output_xo_flags(va_list args,
 		return (-1);
 	l->out_length = ft_strlen(output);
 	l->out = output;
+	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0)
+		l->out_length = 0;
 	chr_output(l);
 	if (*output)
 		free(output);
@@ -498,7 +499,7 @@ static int					output_cs_flags(va_list args, t_list *l)
 		{
 			str = ft_strndup(str, 0, l->precision - 1);
 			l->out_length -= l->precision;
-			l->sp = 1;
+			l->cut_s = 1;
 		}
 		else if (l->precision == 0 && l->dot != 0)
 			l->out_length = 0;
@@ -1125,11 +1126,11 @@ static void				flag_check(t_list *l)
 {
 	if (l->format[l->save] == ' ' && (ft_memchr("dioxX", l->format[l->save + 1], 6)
 		|| ft_isnum(l->format[l->i + 1], 10)))
-		l->sp = 1;
+		l->sp++;
 	else if (l->format[l->save] == '#' && !l->fhash)
 		l->fhash = l->save;
-	else if (l->format[l->save] == '+' && !l->fplus)
-		l->fplus = l->save;
+	else if (l->format[l->save] == '+' && l->fplus == 0)
+		l->fplus = 1;
 	else if (l->format[l->save] == '0' && !l->fzero)
 		l->fzero = l->save;
 	else if (l->format[l->save] == '-' && !l->fminus)
@@ -1290,8 +1291,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 
-	count = ft_printf("%-5.2s is a string\n", "this");
-	count1 = printf("%-5.2s is a string\n", "this");
+	count = ft_printf("%05d", -42);
+	count1 = printf("%05d", -42);
 
 	// printf("%d\n", count);
 	// printf("%d", count1);

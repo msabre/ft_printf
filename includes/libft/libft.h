@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/15 18:24:58 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/16 17:38:51 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ typedef struct			s_list
 	int					out_length;
 	int					dop;
 	int					dop_count;
+	int					cut_s;
 	char				*out;
 	char				dop_mass[10000];
 	char				spase;
