@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/15 20:42:06 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/16 16:36:52 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,13 +282,15 @@ static int					fill_output(t_list *l, char *result)
 	}
 	if (l->precision != 0)
 	{
-		i = (l->precision > 0) ? (l->dop >= 0 ? l->dop : 0) + ((l->length > 0 && l->length != 0) ? l->length : 0) : 0;
+		i = (l->precision > 0) ? (l->dop >= 0 ? l->dop : 0) + ((l->length > 0) ? l->length : 0) : 0;
 		i = (l->precision < 0) ? (l->dop >= 0 ? l->dop : 0) + l->out_length : 0;
 		l->spase = (l->precision > 0) ? '0' : ' ';
 		length = l->precision - l->out_length;
 		while (length-- > 0)
 			result[i++] = l->spase;
 	}
+	if (l->sp == 1 && l->format[l->flag] == 's' && l->length > 0)
+		i += l->length - l->out_length;
 	if (l->length <= 0 && l->precision == 0)
 		i = (l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0;
 	else
@@ -496,6 +498,7 @@ static int					output_cs_flags(va_list args, t_list *l)
 		{
 			str = ft_strndup(str, 0, l->precision - 1);
 			l->out_length -= l->precision;
+			l->sp = 1;
 		}
 		else if (l->precision == 0 && l->dot != 0)
 			l->out_length = 0;
@@ -508,6 +511,13 @@ static int					output_cs_flags(va_list args, t_list *l)
 		*str = c;
 	}
 	l->out = str;
+	if (ft_strcmp(l->out, "") == 0)
+	{
+		if (l->length == 0)
+			return (1);
+		if (l->length != 0)
+			l->precision = 0;	
+	}
 	chr_output(l);
 	return (1);
 }
@@ -1275,18 +1285,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-// int					main(int argc, char **argv)
-// {
-// 	int count;
-// 	int	count1;
-	
-// 	count = ft_printf("%5.2s is a string\n", "this");
-// 	count1 = printf("%5.2s is a string\n", "this");
+int					main(int argc, char **argv)
+{
+	int count;
+	int	count1;
 
-// 	// printf("%d\n", count);
-// 	// printf("%d", count1);
-// 	return (0);
-// }
+	count = ft_printf("%-5.2s is a string\n", "this");
+	count1 = printf("%-5.2s is a string\n", "this");
+
+	// printf("%d\n", count);
+	// printf("%d", count1);
+	return (0);
+}
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
@@ -1299,166 +1309,3 @@ int					ft_printf(const char *format, ...)
 //Если все идут hhhhhhhh то вывод будет на ll
 //Если все идут llllllll то вывод будет на ll
 //Если все идут hhhlhllhh и все в этом роде то вывод будет на ll
-
-// static void					hash_and_plus_check(t_list *l, const char *format, char *out)
-// {
-// 	if (!(*out) && (l->precision == 0) && !ft_memchr("op", format[l->i], 2))
-// 		return ;
-// 	if (l->fplus && l->spase != '0' && *out != '-'
-// 		&& (ft_memchr("dif", format[l->i], 3)))
-// 	{
-// 		l->dop_mass[l->dop++] = '+';
-// 		l->count++;
-// 	}
-// 	if (l->fhash && !l->fzero && ((ft_memchr("xX", format[l->i], 2)
-// 		&& *out != '0') || (format[l->i] == 'p')))
-// 	{
-// 		if (format[l->i] == 'x' || format[l->i] == 'p')
-// 		{
-// 			l->dop_mass[l->dop++] = '0';
-// 			l->dop_mass[l->dop++] = 'x';
-// 		}
-// 		if (format[l->i] == 'X')
-// 		{
-// 			l->dop_mass[l->dop++] = '0';
-// 			l->dop_mass[l->dop++] = 'X';
-// 		}
-// 		l->count += 2;
-// 	}
-// 	else if (l->fhash && format[l->i] == 'o' && *out != '0')
-// 	{
-// 		l->count += 1;
-// 		(l->precision != 0) ? l->precision = mod_minus(l->precision, 1) : 1;
-// 		l->dop_mass[l->dop++] = '0';
-// 	}
-// }
-
-// static void					f_zero(t_list *l, char ***out, const char *format)
-// {
-// 	if (l->fzero && l->precision == 0)
-// 	{
-// 		l->spase = '0';
-// 		(***out == '-') ? l->dop_mass[l->dop++] = '-' : 1;
-// 		(***out == '-') ? (**out)++ : **out;
-// 	}
-// 	if (l->fplus && (ft_memchr("dif", format[l->i], 3)) && ***out != '-')
-// 	{
-// 		(l->spase == '0') ? l->dop_mass[l->dop++] = '+' : 1;
-// 		(l->spase == '0') ? l->count++ : 1;
-// 		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
-// 	}
-// 	if (l->spase == '0' && (format[l->i] == 'p'
-// 		|| (ft_memchr("Xx", format[l->i], 2) && l->fhash)))
-// 	{
-// 		l->count += 2;
-// 		l->dop_mass[l->dop++] = '0';
-// 		l->dop_mass[l->dop++] = 'x';
-// 	}
-// }
-
-// static int						define_countsumm(t_list *l, int length, const char *format)
-// {
-// 	if (l->length != 0)
-// 	{
-// 		if (format[l->i] == 's')
-// 		{
-// 			length = mod_minus(length, l->precision);
-// 			return (mod_minus(l->length, length));
-// 		}
-// 		if (l->precision > 0 && l->precision > length)
-// 			return (l->length = mod_minus(l->length, l->precision));
-// 		return (mod_minus(l->length, length));
-// 	}
-// 	return (0);
-// }
-
-// static int						flag_initialization(t_list *l, char **out, const char *format, int length)
-// {
-// 	(**out == '-' && l->fplus) ? l->fplus = 0 : 1;
-// 	if (l->sp && !l->fplus && **out != '-')
-// 	{
-// 		l->dop_mass[l->dop++] = ' ';
-// 		l->length--;
-// 		l->count++;	
-// 	}
-// 	(mod_compair(l->precision, l->length) == 1) ? l->length = 0 : 1;
-// 	if (**out == '0' && l->dot != 0 && l->precision == 0)
-// 	{
-// 		*out = ""; // нужно протестить возможно нужно чистить free(*out);
-// 		return (l->length);
-// 	}
-// 	(**out == '-' && l->precision > 0 && !l->length) ? l->precision++ : 1;
-// 	if (mod_compair(l->length, length) != 1 || (format[l->i] == 'p' && mod_compair(l->length, length + 2) != 1))
-// 		return (0);
-// 	(l->fminus && l->fzero) ? l->fzero = 0 : 1;
-// 	if (l->fhash && (ft_memchr("xX", format[l->i], 2) || format[l->i] == 'p'))
-// 		(l->length != 0) ? l->length = mod_minus(l->length, 2) : 1;
-// 	else if (l->fhash && format[l->i] == 'o')
-// 		(l->length != 0) ? l->length = mod_minus(l->length, 1) : 1;
-// 	f_zero(l, &out, format);
-// 	if (l->precision < 0)
-// 	{
-// 		l->length = 0;
-// 		return (0);
-// 	}
-// 	return (**out || (!(**out) && format[l->i] == 'c'))
-// 		? define_countsumm(l, length, format) : l->length;
-// }
-
-// static char						*precision_config(t_list *l, char **out, int out_length, int prec)
-// {
-// 	char						*precision;
-// 	char						c;
-// 	int							i;
-
-// 	i = 0;
-// 	c = (l->precision > 0) ? '0' : ' ';
-// 	l->precision = mod_minus(l->precision, out_length);
-// 	l->precision = (l->precision > 0) ? l->precision : l->precision * (-1);
-// 	if (!(precision = (char*)malloc(sizeof(char) * (l->precision + 1))))
-// 		return (NULL);
-// 	if (**out == '-' && prec > 0)
-// 	{
-// 		(*out)++;
-// 		precision[i++] = '-';
-// 	}
-// 	while (l->precision-- > 0)
-// 		precision[i++] = c;
-// 	precision[i] = '\0';
-// 	return (precision);
-// }
-
-// static char						*output_with_precision(t_list *l, char *out, int out_length, const char *format)
-// {
-// 	char				*precision;
-// 	char				*final_out;
-// 	char				c;
-// 	int					prec;
-
-// 	if (!(*out) && format[l->i] != 'c')
-// 		return (0);
-// 	final_out = out;
-// 	prec = l->precision;
-// 	if (l->precision != 0 && l->precision > out_length
-// 		&& !ft_memchr("cs", format[l->i], 2))
-// 	{
-// 		if (!(precision = precision_config(l, &out, out_length, prec)))
-// 		{
-// 			free(out);
-// 			return (NULL);
-// 		}
-// 		final_out = (prec > 0 && prec != 0) ? ft_strjoin(precision, out) : ft_strjoin(out, precision); //  не равно нулю ++
-// 		free(out);
-// 		free(precision);
-// 		if (!final_out)
-// 			return (NULL);
-// 		if (l->dop > 0)
-// 		{
-// 			l->dop_mass[l->dop] = '\0';
-// 			precision = ft_strjoin(l->dop_mass, final_out);
-// 			free(final_out);
-// 			final_out = precision;
-// 		}
-// 	}
-// 	return (final_out);
-// }
