@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 16:42:03 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/17 17:46:19 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -279,7 +279,7 @@ static int					fill_output(t_list *l, char *result)
 	}
 	(l->fplus > 0) ? result[i++] = '+' : 0;
 	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
-	i = minus + (l->spase == '0' ? l->fplus : 0) + l->sp + ((l->length < 0) ? l->out_length : 0);
+	i = minus + (l->spase == ' ' && (l->length > 0 || l->fzero) ? 0 : l->fplus) + l->sp + ((l->length < 0) ? l->out_length : 0);
 	if (l->length != 0)
 		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp - (l->fplus && l->spase != '0' ? 1 : 0);
 	else
@@ -294,7 +294,7 @@ static int					fill_output(t_list *l, char *result)
 	{
 		l->spase = (l->precision > 0) ? '0' : ' ';
 		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->fplus && l->spase == '0' && l->length == 0 ? 1 : 0) + l->sp + l->dop_count + ((l->length > 0) ? l->length - prec : 0);
+		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + l->dop_count + ((l->length > 0) ? l->length - prec : 0);
 		if (l->precision < 0)
 			i = l->out_length ;
 		length = prec - l->out_length + l->fplus;
@@ -327,11 +327,13 @@ static char					*flag_inicializatian(t_list *l)
 		l->length = 0;
 	if (l->fzero && l->fminus)
 		l->fzero = -1;
+	if (l->fzero && l->dot > 0)
+		l->fzero = 0;
 	if (l->fzero > 0)
 		l->spase = '0';
-	if (l->fplus > 0)
-		(l->sp < 1) ? l->out_length++ : 1;
-	if (mod_compair(l->precision, l->length) == 1)
+	if (l->fplus > 0 && l->sp < 1)
+		l->out_length++;
+	if (mod_compair(l->precision, l->length) == 1 )
 		l->length = 0;
 	if (mod_compair(l->out_length, l->precision) == 1)
 		l->precision = 0;
@@ -1297,18 +1299,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-// int					main(int argc, char **argv)
-// {
-// 	int count;
-// 	int	count1;
+int					main(int argc, char **argv)
+{
+	int count;
+	int	count1;
 
-// 	ft_printf("%0+5d\n", 42);
-// 	printf("%0+5d\n", 42);
+	ft_printf("%03.2d", -1);
+	printf("%03.2d", -1);
 
-// 	// printf("%d\n", count);
-// 	// printf("%d", count1);
-// 	return (0);
-// }
+	// printf("%d\n", count);
+	// printf("%d", count1);
+	return (0);
+}
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
