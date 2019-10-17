@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 18:08:15 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/17 18:12:58 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,6 +333,8 @@ static char					*flag_inicializatian(t_list *l)
 		l->fzero = 0;
 	if (l->fzero > 0)
 		l->spase = '0';
+	if (!(l->fplus && ft_memchr("dioxX", l->format[l->flag], 5)))
+		l->fplus = 0;
 	if (l->fplus > 0 && l->sp < 1)
 		l->out_length++;
 	if (mod_compair(l->precision, l->length) == 1 )
@@ -1306,8 +1308,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	ft_printf("%5.2s is a string\n", "this");
-// 	printf("%5.2s is a string\n", "this");
+// 	ft_printf("%+u\n", 4294967295);
+// 	printf("%+u\n", 4294967295);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
