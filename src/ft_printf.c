@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 17:46:19 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/17 18:08:15 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -271,11 +271,13 @@ static int					fill_output(t_list *l, char *result)
 	i = (l->spase == ' ' && l->fplus > 0 && l->length > 0) ? l->length - l->out_length - 1 : 0;
 	j = 0;
 	minus = 0;
-	if (*(l->out) == '-' && l->spase == '0')
+	if (*(l->out) == '-' && (l->spase == '0' || l->precision > 0))
 	{
 		result[i++] = '-';
 		j++;
 		minus++;
+		l->length--;
+		l->out_length--;
 	}
 	(l->fplus > 0) ? result[i++] = '+' : 0;
 	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
@@ -294,15 +296,15 @@ static int					fill_output(t_list *l, char *result)
 	{
 		l->spase = (l->precision > 0) ? '0' : ' ';
 		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + l->dop_count + ((l->length > 0) ? l->length - prec : 0);
+		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + ((l->length > 0) ? l->length - prec : 0);
 		if (l->precision < 0)
-			i = l->out_length ;
+			i += l->out_length;
 		length = prec - l->out_length + l->fplus;
 		while (length-- > 0)
 			result[i++] = l->spase;
 	}
 	if (l->cut_s == 1 && l->format[l->flag] == 's' && l->length > 0)
-		i += l->fplus + l->sp + l->length - l->out_length;
+		i = l->fplus + l->sp + (l->length - l->out_length);
 	if (l->length <= 0 && l->precision == 0)
 		i = minus + l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
 	else
@@ -1299,18 +1301,18 @@ int					ft_printf(const char *format, ...)
 	return (l->count);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	ft_printf("%03.2d", -1);
-	printf("%03.2d", -1);
+// 	ft_printf("%5.2s is a string\n", "this");
+// 	printf("%5.2s is a string\n", "this");
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
