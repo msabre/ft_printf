@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 18:12:58 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/17 20:16:50 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,7 @@ static t_list					*struct_init(const char *format)
 		return (NULL);
 	l->i = 0;
 	l->count = 0;
+	l->n_count = 0;
 	l->format = format;
 	zero_flags(l);
 	return (l);
@@ -254,7 +255,7 @@ static int					get_buffer(t_list *l, char *new_str)
 	if (!(ptr = l->buffer_for_write))
 		ptr = "";
 	l->buffer_for_write = ft_strjoin(ptr, new_str);
-	(ft_strcmp(new_str, "%") != 0) ? free(new_str) : 1;
+	// (ft_strcmp(new_str, "%") != 0) ? free(new_str) : 1;
 	if (!(l->buffer_for_write))
 		return (-1);
 	return (1);
@@ -529,6 +530,14 @@ static int					output_cs_flags(va_list args, t_list *l)
 		*str = c;
 	}
 	l->out = str;
+	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
+	{
+		if (!(get_buffer(l, "0")))
+			return (-1);
+		l->darwin_null[l->n_count++] = ft_strlen(l->buffer_for_write) - 1;
+		l->darwin_null[l->n_count] = -1;
+		return (1);
+	}
 	if (ft_strcmp(l->out, "") == 0)
 	{
 		if (l->length == 0)
@@ -1263,6 +1272,21 @@ static int			add_anytext_tobuff(t_list *l)
 	return (1);
 }
 
+static void			dawrin_nulls(t_list *l)
+{
+	int				i;
+	int				j;
+
+	i = 0;
+	j = 0;
+	while (l->darwin_null[i] >= 0)
+	{
+		j = l->darwin_null[i];
+		l->buffer_for_write[j] = '\0';
+		i++;
+	}
+}
+
 int					ft_printf(const char *format, ...)
 {
 	va_list			args;
@@ -1293,14 +1317,13 @@ int					ft_printf(const char *format, ...)
 			}
 		}
 	}
-	if (l->count)
-	{
-		length = ft_strlen(l->buffer_for_write);
+	length = ft_strlen(l->buffer_for_write);
+	(l->n_count > 0) ? dawrin_nulls(l) : 1;
+	if (length)
 		write(1, l->buffer_for_write, length);
-	}
 	(l->buffer_for_write) ? free(l->buffer_for_write) : 1;
 	free(l);
-	return (l->count);
+	return (length);
 }
 
 // int					main(int argc, char **argv)
@@ -1308,16 +1331,16 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	ft_printf("%+u\n", 4294967295);
-// 	printf("%+u\n", 4294967295);
+// 	ft_printf("%.2c\n", NULL);
+// 	printf("%.2c\n", NULL);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
 // 	return (0);
 // }
 
-//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //Строки для теста
+//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
