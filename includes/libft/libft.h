@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 20:14:11 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/18 16:13:21 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ typedef struct			s_list
 	int					dop_count;
 	int					cut_s;
 	int					n_count;
+	int					free_block;
 	char				*out;
 	char				darwin_null[15];
 	char				spase;

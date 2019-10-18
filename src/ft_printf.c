@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/17 20:16:50 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/18 17:11:50 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,7 @@ static void					zero_flags(t_list *l)
 	l->length = 0;
 	l->precision = 0;
 	l->cut_s = 0;
+	l->free_block = 0;
 	l->dop = -1;
 	l->dop_count = 0;
 	l->hash = NULL;
@@ -105,6 +106,10 @@ static t_list					*struct_init(const char *format)
 	l->count = 0;
 	l->n_count = 0;
 	l->format = format;
+	l->buffer_for_write = (char*)malloc(sizeof(char));
+	if (!(l->buffer_for_write))
+		return (NULL);
+	*(l->buffer_for_write) = '\0';
 	zero_flags(l);
 	return (l);
 }
@@ -120,8 +125,12 @@ static char				*ft_strndup(const char *str, int start, int end)
 	ptr = (char*)malloc(sizeof(char) * (length + 1));
 	if (!ptr)
 		return (NULL);
-	while (start <= end)
-		ptr[i++] = str[start++];
+	while (start <= end && str[start] != '\0')
+	{
+		ptr[i] = str[start];
+		i++;
+		start++;
+	}
 	ptr[i] = '\0';
 	return (ptr);
 }
@@ -252,13 +261,71 @@ static int					get_buffer(t_list *l, char *new_str)
 	
 	if (!new_str)
 		return (1);
-	if (!(ptr = l->buffer_for_write))
-		ptr = "";
+	ptr = l->buffer_for_write;
 	l->buffer_for_write = ft_strjoin(ptr, new_str);
-	// (ft_strcmp(new_str, "%") != 0) ? free(new_str) : 1;
+	(ft_strcmp(new_str, "%") != 0) ? free(new_str) : 1;
+	free(ptr);
 	if (!(l->buffer_for_write))
 		return (-1);
 	return (1);
+}
+
+static char					*flag_inicializatian(t_list *l)
+{
+	int						count_space;
+	char					*result;
+
+	count_space = 0;
+	if (l->precision < 0)
+		l->length = 0;
+	if (l->fzero && l->fminus)
+		l->fzero = -1;
+	if (l->fzero && l->dot > 0)
+		l->fzero = 0;
+	if (l->fzero > 0)
+		l->spase = '0';
+	if (l->fplus > 0 && l->sp > 0)
+		l->sp = 0;
+	if (!(l->fplus && ft_memchr("dioxX", l->format[l->flag], 5)))
+		l->fplus = 0;
+	if (l->fplus > 0 && l->sp < 1)
+		l->out_length++;
+	if (mod_compair(l->precision, l->length) == 1 )
+		l->length = 0;
+	if (mod_compair(l->out_length, l->precision) == 1 || ft_memchr("cs", l->format[l->flag], 2))
+		l->precision = 0;
+	if (l->length > l->out_length)
+		l->sp = 0;
+	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
+	{
+		if (l->format[l->flag] == 'o')
+			l->hash = "0";
+		else
+			l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
+		l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
+		if (l->spase == ' ' && l->length > 0)
+			l->dop = l->length - l->out_length - l->dop_count;
+		else
+			l->dop = 0;
+	}
+	else if (l->precision == 0 && l->dot && *(l->out) == '0')
+		l->dop = -2;
+	if (mod_compair(l->precision, l->length) == 1)
+		count_space = mod_minus(l->precision, l->out_length);
+	else if (mod_compair(l->length, l->out_length) == 1)
+	{
+		count_space = mod_minus(l->length, l->out_length);
+		count_space = (l->dop >= 0) ? mod_minus(count_space, l->dop_count) : count_space;
+	}
+	count_space *= (count_space < 0) ? -1 : 1;
+	if (l->sp && l->fplus <= 0 && *(l->out) != '-')
+		l->out_length++;
+	else
+		l->sp = 0;
+	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count))))
+		return (NULL);
+	(l->dop >= 0) ? result[l->dop] = '\0' : 1;
+	return (result);
 }
 
 static int					fill_output(t_list *l, char *result)
@@ -269,7 +336,7 @@ static int					fill_output(t_list *l, char *result)
 	int						length;
 	int						prec;
 
-	i = (l->spase == ' ' && l->fplus > 0 && l->length > 0) ? l->length - l->out_length - 1 : 0;
+	i = (l->spase == ' ' && l->fplus > 0 && l->length > 0) ? l->length - l->out_length : 0;
 	j = 0;
 	minus = 0;
 	if (*(l->out) == '-' && (l->spase == '0' || l->precision > 0))
@@ -310,70 +377,18 @@ static int					fill_output(t_list *l, char *result)
 		i = minus + l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
 	else
 		i += l->sp + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0);
+	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
+	{
+		l->out = "0";
+		l->darwin_null[l->n_count++] = ft_strlen(l->buffer_for_write) + i;
+		l->darwin_null[l->n_count] = -1;
+	}
 	if (l->dop != -2)
 		while (l->out[j])
 			result[i++] = (l)->out[j++];
 	else
 		result[l->length] = '\0';
-	l->count += ft_strlen(result);
-	get_buffer(l, result);
-	return (1);
-}
-
-static char					*flag_inicializatian(t_list *l)
-{
-	int						count_space;
-	char					*result;
-
-	count_space = 0;
-	if (l->precision < 0)
-		l->length = 0;
-	if (l->fzero && l->fminus)
-		l->fzero = -1;
-	if (l->fzero && l->dot > 0)
-		l->fzero = 0;
-	if (l->fzero > 0)
-		l->spase = '0';
-	if (!(l->fplus && ft_memchr("dioxX", l->format[l->flag], 5)))
-		l->fplus = 0;
-	if (l->fplus > 0 && l->sp < 1)
-		l->out_length++;
-	if (mod_compair(l->precision, l->length) == 1 )
-		l->length = 0;
-	if (mod_compair(l->out_length, l->precision) == 1)
-		l->precision = 0;
-	if (l->length > l->out_length)
-		l->sp = 0;
-	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
-	{
-		if (l->format[l->flag] == 'o')
-			l->hash = "0";
-		else
-			l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
-		l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
-		if (l->spase == ' ' && l->length > 0 )
-			l->dop = l->length - l->out_length - l->dop_count;
-		else
-			l->dop = 0;
-	}
-	else if (l->precision == 0 && l->dot && *(l->out) == '0')
-		l->dop = -2;
-	if (mod_compair(l->precision, l->length) == 1)
-		count_space = mod_minus(l->precision, l->out_length);
-	else if (mod_compair(l->length, l->out_length) == 1)
-	{
-		count_space = mod_minus(l->length, l->out_length);
-		count_space = (l->dop >= 0) ? mod_minus(count_space, l->dop_count) : count_space;
-	}
-	count_space *= (count_space < 0) ? -1 : 1;
-	if (l->sp && l->fplus <= 0 && *(l->out) != '-')
-		l->out_length++;
-	else
-		l->sp = 0;
-	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count))))
-		return (NULL);
-	(l->dop >= 0) ? result[l->dop] = '\0' : 1;
-	return (result);
+	return (!(get_buffer(l, result))) ? -1 : 1;
 }
 
 static int					chr_output(t_list *l)
@@ -384,6 +399,7 @@ static int					chr_output(t_list *l)
 	if (!(result = flag_inicializatian(l)))
 		return (-1);
 	fill_output(l, result);
+	(l->free_block == 0) ? free(l->out) : 1;
 	return (1);
 }
 
@@ -476,8 +492,6 @@ static int						output_xo_flags(va_list args,
 	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0)
 		l->out_length = 0;
 	chr_output(l);
-	if (*output)
-		free(output);
 	return (1);
 }
 
@@ -507,6 +521,7 @@ static int					output_cs_flags(va_list args, t_list *l)
 	char			c;
 
 	l->out_length = 1;
+	l->free_block = 1;
 	if (l->format[l->i] == 's')
 	{
 		str = va_arg(args, char*);
@@ -516,29 +531,24 @@ static int					output_cs_flags(va_list args, t_list *l)
 		if (l->dot && l->precision < l->out_length)
 		{
 			str = ft_strndup(str, 0, l->precision - 1);
-			l->out_length -= l->precision;
+			l->out_length = l->precision;
 			l->cut_s = 1;
+			l->free_block = 0;
 		}
 		else if (l->precision == 0 && l->dot != 0)
 			l->out_length = 0;
 	}
 	else
 	{
-		if (!(str = (char*)malloc(sizeof(char))))
+		if (!(str = (char*)malloc(sizeof(char) * 2)))
 			return (-1);
 		c = va_arg(args, int);
-		*str = c;
+		str[0] = c;
+		str[1] = '\0';
+		l->free_block = (c == 0) ? 1 : 0;
 	}
 	l->out = str;
-	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
-	{
-		if (!(get_buffer(l, "0")))
-			return (-1);
-		l->darwin_null[l->n_count++] = ft_strlen(l->buffer_for_write) - 1;
-		l->darwin_null[l->n_count] = -1;
-		return (1);
-	}
-	if (ft_strcmp(l->out, "") == 0)
+	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] != 'c')
 	{
 		if (l->length == 0)
 			return (1);
@@ -1232,8 +1242,8 @@ static int					ft_variants(va_list args, t_list *l)
 		{
 			if (l->format[l->i] == '%' && l->format[l->i - 1] == '%')
 			{
+				l->free_block = 1;
 				get_buffer(l, "%");
-				l->count++;
 			}
 			l->start = 0;
 		}
@@ -1254,10 +1264,7 @@ static int			add_anytext_tobuff(t_list *l)
 	i = l->i;
 	j = 0;
 	while (l->format[l->i] != '%' && l->format[l->i] != '\0')
-	{
 		l->i++;
-		l->count++;
-	}
 	count = l->i - i;
 	simple_text = (char*)malloc(sizeof(char) * (count + 1));
 	if (!simple_text)
@@ -1302,26 +1309,18 @@ int					ft_printf(const char *format, ...)
 		if (format[l->i] == '%')
 		{
 			if (!(ft_variants(args, l)))
-			{
-				l->count = -1;
 				break ;
-			}
 			zero_flags(l);
 		}
 		else
-		{
 			if (!(add_anytext_tobuff(l)))
-			{
-				l->count = 0;
 				break ;
-			}
-		}
 	}
-	length = ft_strlen(l->buffer_for_write);
+	length = (l->i == length) ? ft_strlen(l->buffer_for_write) : 0;
 	(l->n_count > 0) ? dawrin_nulls(l) : 1;
-	if (length)
+	if (length > 0)
 		write(1, l->buffer_for_write, length);
-	(l->buffer_for_write) ? free(l->buffer_for_write) : 1;
+	free(l->buffer_for_write);
 	free(l);
 	return (length);
 }
@@ -1331,8 +1330,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	ft_printf("%.2c\n", NULL);
-// 	printf("%.2c\n", NULL);
+// 	count = ft_printf("%+5d\n", 35);
+// 	count1 = printf("%+5d\n", 35);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
@@ -1340,7 +1339,7 @@ int					ft_printf(const char *format, ...)
 // }
 
 //Строки для теста
-//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
+// 1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
