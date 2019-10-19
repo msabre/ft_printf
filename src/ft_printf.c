@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/19 20:54:50 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/19 23:11:19 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,13 +289,13 @@ static char					*flag_inicializatian(t_list *l)
 		l->sp = 0;
 	if (!(l->fplus && ft_memchr("dioxX", l->format[l->flag], 5)))
 		l->fplus = 0;
-	if (mod_compair(l->out_length, l->length) == 1)
+	if (mod_compair(l->out_length, l->length) == 1 || mod_compair(l->out_length, l->length) == 0)
 		l->length = 0;
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
 	if (mod_compair(l->out_length, l->precision) == 1 || ft_memchr("cs", l->format[l->flag], 2))
 		l->precision = 0;
-	if (l->length > l->out_length)
+	if (l->length > l->out_length || (l->sp && *(l->out) == '-'))
 		l->sp = 0;
 	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
 	{
@@ -322,9 +322,9 @@ static char					*flag_inicializatian(t_list *l)
 	count_space *= (count_space < 0) ? -1 : 1;
 	if (*(l->out) == '-' && l->precision > 0 && l->precision && l->length == 0)
 		count_space++;
-	if (l->sp > 0 && l->fplus <= 0 && *(l->out) != '-')
-		l->out_length++;
-	else
+	if (l->sp > 0 && l->fplus <= 0 && *(l->out) != '-' && l->length >= 0 && !l->dot)
+		count_space++;
+	else if (l->length >= 0)
 		l->sp = 0;
 	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count + l->fplus))))
 		return (NULL);
@@ -1174,8 +1174,7 @@ static int						length_check(t_list *l, int sign)
 
 static void				flag_check(t_list *l)
 {
-	if (l->format[l->save] == ' ' && (ft_memchr("dioxX", l->format[l->save + 1], 6)
-		|| ft_isnum(l->format[l->i + 1], 10)))
+	if (l->format[l->save] == ' ')
 		l->sp++;
 	else if (l->format[l->save] == '#' && !l->fhash)
 		l->fhash = l->save;
@@ -1344,8 +1343,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 
-	count = ft_printf("% 5d\n", 52625);
-	count1 = printf("% 5d\n", 52625);
+	count = ft_printf("% .5d\n", 2);
+	count1 = printf("% .5d\n", 2);
 
 	// printf("%d\n", count);
 	// printf("%d", count1);
