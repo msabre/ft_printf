@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/19 23:11:19 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/19 23:49:54 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,7 +295,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->length = 0;
 	if (mod_compair(l->out_length, l->precision) == 1 || ft_memchr("cs", l->format[l->flag], 2))
 		l->precision = 0;
-	if (l->length > l->out_length || (l->sp && *(l->out) == '-'))
+	if ((l->length > l->out_length && l->sp == ' ') || (l->sp && *(l->out) == '-'))
 		l->sp = 0;
 	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
 	{
@@ -320,9 +320,9 @@ static char					*flag_inicializatian(t_list *l)
 		count_space = (l->fplus >= 0) ? mod_minus(count_space, l->fplus) : count_space;
 	}
 	count_space *= (count_space < 0) ? -1 : 1;
-	if (*(l->out) == '-' && l->precision > 0 && l->precision && l->length == 0)
+	if (*(l->out) == '-' && l->precision > 0 && l->length == 0)
 		count_space++;
-	if (l->sp > 0 && l->fplus <= 0 && *(l->out) != '-' && l->length >= 0 && !l->dot)
+	if (l->sp > 0 && !l->fplus && *(l->out) != '-' && l->length >= 0)
 		count_space++;
 	else if (l->length >= 0)
 		l->sp = 0;
@@ -390,7 +390,7 @@ static int					fill_output(t_list *l, char *result)
 	if (l->length <= 0 && l->precision == 0)
 		i = minus + l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
 	else
-		i += l->sp + (l->fplus && l->spase != '0' ? 1 : 0) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0) + (j > 0 && l->length > 0 && l->spase != '0' ? minus : 0);
+		i += (l->fplus && l->spase != '0' ? 1 : 0) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0) + (j > 0 && l->length > 0 && l->spase != '0' ? minus : 0);
 	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
 	{
 		l->out = "0";
@@ -1343,8 +1343,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 
-	count = ft_printf("% .5d\n", 2);
-	count1 = printf("% .5d\n", 2);
+	count = ft_printf("% 05d\n", 43);
+	count1 = printf("% 05d\n", 43);
 
 	// printf("%d\n", count);
 	// printf("%d", count1);
