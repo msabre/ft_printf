@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/21 16:57:49 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/21 17:21:26 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -461,6 +461,11 @@ static int						output_di_flags(va_list args,
 		return (-1);
 	l->out_length = ft_strlen(d_chr);
 	(l->fplus > 0 && *d_chr == '-') ? l->fplus = 0 : 1;
+	if (l->dot && l->precision == 0 && *d_chr == '0')
+	{
+		*d_chr = '\0';
+		l->out_length = 0;
+	}
 	l->out = d_chr;
 	chr_output(l);
 	return (1);
@@ -1343,8 +1348,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("% -8.5d\n", 34);
-// 	count1 = printf("% -8.5d\n", 34);
+// 	count = ft_printf("%+.0d\n", 0);
+// 	count1 = printf("%+.0d\n", 0);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
