@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/21 22:59:45 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/21 23:09:29 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,7 +379,7 @@ static int					fill_output(t_list *l, char *result)
 	if (l->precision != 0)
 	{
 		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 && l->spase == '0' ? l->length - l->precision : 0) + (l->spase == ' ' && l->length > 0 ? l->length - l->precision - l->dop_count : 0);
+		i = (l->length <= 0 && l->precision > 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 && l->spase == '0' ? l->length - l->precision : 0) + (l->spase == ' ' && l->length > 0 ? l->length - l->precision - l->dop_count : 0);
 		if (l->precision < 0)
 			i += l->out_length;
 		length = prec - l->out_length - (l->precision > 0 && l->precision > l->length && l->spase == '0' ? l->dop_count : 0);
@@ -513,6 +513,7 @@ static int						output_xo_flags(va_list args,
 	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0 && l->dot)
 	{
 		*(l->out) = '\0';
+		l->fhash = 0;
 		l->out_length = 0;
 	}
 	chr_output(l);
@@ -1353,8 +1354,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("%#8.5x\n", 21);
-// 	count1 = printf("%#8.5x\n", 21);
+// 	count = ft_printf("%#.0x\n", 0);
+// 	count1 = printf("%#.0x\n", 0);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
