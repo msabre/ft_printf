@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/21 21:24:43 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/21 22:59:45 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -378,12 +378,12 @@ static int					fill_output(t_list *l, char *result)
 	}
 	if (l->precision != 0)
 	{
-		l->spase = (l->precision > 0) ? '0' : ' ';
 		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 ? l->length - l->precision : 0);
+		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 && l->spase == '0' ? l->length - l->precision : 0) + (l->spase == ' ' && l->length > 0 ? l->length - l->precision - l->dop_count : 0);
 		if (l->precision < 0)
 			i += l->out_length;
-		length = prec - l->out_length - (l->precision > 0 && l->precision > l->length ? l->dop_count : 0);
+		length = prec - l->out_length - (l->precision > 0 && l->precision > l->length && l->spase == '0' ? l->dop_count : 0);
+		l->spase = (l->precision > 0) ? '0' : ' ';
 		while (length-- > 0)
 			result[i++] = l->spase;
 	}
@@ -1348,18 +1348,18 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	count = ft_printf("%#.5x\n", 21);
-	count1 = printf("%#.5x\n", 21);
+// 	count = ft_printf("%#8.5x\n", 21);
+// 	count1 = printf("%#8.5x\n", 21);
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //184467448394759384759834795738475983438746587234879560283764587632487568s3624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
