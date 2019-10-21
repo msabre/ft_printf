@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/19 23:49:54 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/21 16:57:49 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,7 +295,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->length = 0;
 	if (mod_compair(l->out_length, l->precision) == 1 || ft_memchr("cs", l->format[l->flag], 2))
 		l->precision = 0;
-	if ((l->length > l->out_length && l->sp == ' ') || (l->sp && *(l->out) == '-'))
+	if (l->sp > 0 && *(l->out) == '-')
 		l->sp = 0;
 	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
 	{
@@ -322,9 +322,9 @@ static char					*flag_inicializatian(t_list *l)
 	count_space *= (count_space < 0) ? -1 : 1;
 	if (*(l->out) == '-' && l->precision > 0 && l->length == 0)
 		count_space++;
-	if (l->sp > 0 && !l->fplus && *(l->out) != '-' && l->length >= 0)
+	if (l->sp > 0 && l->precision >= l->length && l->length >= 0)
 		count_space++;
-	else if (l->length >= 0)
+	else if (l->sp > 0 && l->precision && l->length >= 0)
 		l->sp = 0;
 	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count + l->fplus))))
 		return (NULL);
@@ -1338,18 +1338,18 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	count = ft_printf("% 05d\n", 43);
-	count1 = printf("% 05d\n", 43);
+// 	count = ft_printf("% -8.5d\n", 34);
+// 	count1 = printf("% -8.5d\n", 34);
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
