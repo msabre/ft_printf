@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/21 17:21:26 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/21 21:24:43 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,8 +304,8 @@ static char					*flag_inicializatian(t_list *l)
 		else
 			l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
 		l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
-		if (l->spase == ' ' && l->length > 0)
-			l->dop = l->length - l->out_length - l->dop_count;
+		if (l->spase == ' ' && l->length > 0 && l->length - l->out_length >= l->dop_count)
+			l->dop = l->length - (l->precision > l->out_length ? l->precision : l->out_length) - l->dop_count;
 		else
 			l->dop = 0;
 	}
@@ -313,12 +313,14 @@ static char					*flag_inicializatian(t_list *l)
 		l->dop = -2;
 	if (mod_compair(l->precision, l->length) == 1)
 		count_space = mod_minus(l->precision, l->out_length);
-	else if (mod_compair(l->length, l->out_length) == 1)
+	if (mod_compair(l->length, l->out_length) == 1)
 	{
 		count_space = mod_minus(l->length, l->out_length);
-		count_space = (l->dop >= 0) ? mod_minus(count_space, l->dop_count) : count_space;
 		count_space = (l->fplus >= 0) ? mod_minus(count_space, l->fplus) : count_space;
 	}
+	if (mod_compair(l->dop_count, count_space) == 1)
+		count_space = 0;
+	count_space = (l->dop >= 0 && mod_compair(count_space, l->dop_count) == 1 && l->length) ? mod_minus(count_space, l->dop_count) : count_space;
 	count_space *= (count_space < 0) ? -1 : 1;
 	if (*(l->out) == '-' && l->precision > 0 && l->length == 0)
 		count_space++;
@@ -362,7 +364,7 @@ static int					fill_output(t_list *l, char *result)
 		l->out_length--;
 		j++;
 	}
-	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop > 0 ? l->dop : 0)]), l->hash) : 0;
+	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash) : 0;
 	i = (l->spase == ' ' ? 0 : minus) + (l->spase == ' ' && l->length > 0 ? 0 : l->fplus) + l->sp + (l->precision > 0 && l->length < 0 ? l->precision - l->out_length : 0) + ((l->length < 0) ? l->out_length : 0);
 	if (l->length != 0)
 		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp - l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0);
@@ -378,10 +380,10 @@ static int					fill_output(t_list *l, char *result)
 	{
 		l->spase = (l->precision > 0) ? '0' : ' ';
 		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + ((l->length > 0) ? l->length - prec : 0);
+		i = (l->spase == '0' && l->length <= 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 ? l->length - l->precision : 0);
 		if (l->precision < 0)
 			i += l->out_length;
-		length = prec - l->out_length;
+		length = prec - l->out_length - (l->precision > 0 && l->precision > l->length ? l->dop_count : 0);
 		while (length-- > 0)
 			result[i++] = l->spase;
 	}
@@ -498,7 +500,7 @@ static int						output_xo_flags(va_list args,
 	char				*output;
 	int					count;
 	int					num_system;
-	
+
 	xo = va_arg(args, unsigned long long);
 	if (!(*type))
 		output = decimy_to_any((unsigned int)xo, ft_num_sys(l->format[l->i]), l->format[l->i]);
@@ -508,8 +510,11 @@ static int						output_xo_flags(va_list args,
 		return (-1);
 	l->out_length = ft_strlen(output);
 	l->out = output;
-	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0)
+	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0 && l->dot)
+	{
+		*(l->out) = '\0';
 		l->out_length = 0;
+	}
 	chr_output(l);
 	return (1);
 }
@@ -1343,21 +1348,21 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-// int					main(int argc, char **argv)
-// {
-// 	int count;
-// 	int	count1;
+int					main(int argc, char **argv)
+{
+	int count;
+	int	count1;
 
-// 	count = ft_printf("%+.0d\n", 0);
-// 	count1 = printf("%+.0d\n", 0);
+	count = ft_printf("%#.5x\n", 21);
+	count1 = printf("%#.5x\n", 21);
 
-// 	// printf("%d\n", count);
-// 	// printf("%d", count1);
-// 	return (0);
-// }
+	// printf("%d\n", count);
+	// printf("%d", count1);
+	return (0);
+}
 
 //Строки для теста
-//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
+//184467448394759384759834795738475983438746587234879560283764587632487568s3624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
