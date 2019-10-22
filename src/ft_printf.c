@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 15:26:17 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 15:44:16 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,7 +297,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->precision = 0;
 	if (l->sp > 0 && *(l->out) == '-')
 		l->sp = 0;
-	if (l->fhash && (*(l->out) != '0' || l->format[l->flag] == 'o'))
+	if (l->fhash)
 	{
 		if (l->format[l->flag] == 'o')
 			l->hash = "0";
@@ -364,7 +364,7 @@ static int					fill_output(t_list *l, char *result)
 		l->out_length--;
 		j++;
 	}
-	(l->hash && *(l->out) != '0') ? ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash) : 0;
+	(l->hash) ? ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash) : 0;
 	i = (l->spase == ' ' ? 0 : minus) + (l->spase == ' ' && l->length > 0 ? 0 : l->fplus) + l->sp + (l->precision > 0 && l->length < 0 ? l->precision - l->out_length : 0) + ((l->length < 0) ? l->out_length : 0);
 	if (l->length != 0)
 		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp - l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0);
@@ -390,7 +390,7 @@ static int					fill_output(t_list *l, char *result)
 	if (l->cut_s == 1 && l->format[l->flag] == 's' && l->length > 0)
 		i = l->fplus + l->sp + (l->length - l->out_length);
 	if (l->length <= 0 && l->precision == 0)
-		i = minus + l->fplus + l->sp + ((l->dop >= 0 && *(l->out) != 48) ? l->dop + l->dop_count : 0);
+		i = minus + l->fplus + l->sp + (l->dop >= 0 ? l->dop + l->dop_count : 0);
 	else
 		i += (l->fplus && l->spase != '0' ? 1 : 0) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0) + (j > 0 && l->length > 0 && l->spase != '0' ? minus : 0);
 	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
@@ -544,6 +544,11 @@ static int						output_p_flags(va_list args,
 	l->out_length = ft_strlen(integer);
 	l->fhash = 1;
 	l->out = integer;
+	if (l->dot > 0 && l->precision == 0 && *(l->out) == '0') 
+	{
+		l->out_length = 0;
+		*(l->out) = '\0';
+	}
 	chr_output(l);
 	return (1);
 }
@@ -1362,8 +1367,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("%#.5o\n", 5263);
-// 	count1 = printf("%#.5o\n", 5263);
+// 	count = ft_printf("%13.0p\n", 12340);
+// 	count1 = printf("%13.0p\n", 12340);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
