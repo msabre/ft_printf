@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/21 23:22:26 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 15:26:17 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -510,13 +510,20 @@ static int						output_xo_flags(va_list args,
 		return (-1);
 	l->out_length = ft_strlen(output);
 	l->out = output;
-	if (l->fhash && *(l->out) == '0')
-		l->fhash = 0;
-	if (ft_strcmp(l->out, "0") == 0 && l->fhash > 0 && l->precision == 0 && l->dot)
+	if (*(l->out) == '0')
 	{
-		*(l->out) = '\0';
-		l->out_length = 0;
+		if (l->dot > 0 && l->precision == 0)
+		{
+			*(l->out) = '\0';
+			l->out_length = 0;
+			if (l->format[l->flag] == 'x')
+				l->fhash = 0;
+		}
+		else
+			l->fhash = 0;
 	}
+	else if (l->precision > l->out_length && l->format[l->flag] == 'o')
+		l->fhash = 0;
 	chr_output(l);
 	return (1);
 }
@@ -1355,8 +1362,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("this %#o number\n", 0);
-// 	count1 = printf("this %#o number\n", 0);
+// 	count = ft_printf("%#.5o\n", 5263);
+// 	count1 = printf("%#.5o\n", 5263);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
