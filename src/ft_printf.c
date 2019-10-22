@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 17:23:01 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 19:08:52 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -670,7 +670,7 @@ static int					*add_ll_parts(int *a, int *b, int a_size, int b_size)
 	return (result);
 }
 
-static char					*str_fr_intmass(int	*a, int size)
+static char					*str_fr_intmass(int	*a, int size, t_list *l)
 {
 	char					*str;
 	int						i;
@@ -678,16 +678,19 @@ static char					*str_fr_intmass(int	*a, int size)
 	i = 0;
 	if (!a)
 		return (NULL);
+	size = (l->fhash && l->precision == 0) ? size++ : size;
 	if (!(str = (char*)malloc(sizeof(char) * (size + 1))))
 		return (NULL);
-	size -= 1;
+	size -= 2;
 	while (size >= 0)
 		str[i++] = a[size--] + 48;
+	if (l->fhash && l->precision == 0)
+		str[i++] = '.';
 	str[i] = '\0';
 	return (str);
 }
 
-static char		 			*get_bn_str(int **result)
+static char		 			*get_bn_str(int **result, t_list *l)
 {
 	int						*a;
 	int						*b;
@@ -715,7 +718,7 @@ static char		 			*get_bn_str(int **result)
 		a = b;
 		i++;
 	}
-	str = str_fr_intmass(a, size_int_mass(a));
+	str = str_fr_intmass(a, size_int_mass(a), l);
 	free(a);
 	if (!str)
 		return (NULL);
@@ -890,14 +893,14 @@ static int					get_binary(char **src, unsigned long a)
 	return (count);
 }
 
-static char					*norm_chr_ll(long double f, int precision, int sign)
+static char					*norm_chr_ll(long double f, t_list *l, int sign)
 {
 	char					*str;
 	double long				num;
 	int						i;
 
 	num = (unsigned long long int)f;
-	if (precision == 0)
+	if (l->precision == 0)
 	{
 		f -= (long long)f;
 		f *= 10;
@@ -905,6 +908,8 @@ static char					*norm_chr_ll(long double f, int precision, int sign)
 			num++;
 		if (sign == 1)
 			num = -num;
+		if (l->fhash && l->precision == 0)
+			num *= 10;
 	}
 	str = ft_itoa(num);
 	return (str);
@@ -920,7 +925,7 @@ static void					free_struct(t_num_parts **mant_exp)
 	free(mant_exp);
 }
 
-static char					*add_to_string(int e, unsigned long mantis_byte, long double f)
+static char					*add_to_string(int e, unsigned long mantis_byte, long double f, t_list *l)
 {	
 	t_num_parts				**mant_exp;
 	char					*mantis;
@@ -957,9 +962,9 @@ static char					*add_to_string(int e, unsigned long mantis_byte, long double f)
 	result = get_bignum(&mant_exp, count - 1);
 	free_struct(mant_exp);
 	if (result[1] == NULL)
-		mantis = str_fr_intmass(*result, size_int_mass(*result));
+		mantis = str_fr_intmass(*result, size_int_mass(*result), l);
 	else
-		mantis = get_bn_str(result);
+		mantis = get_bn_str(result, l);
 	free_doub_lvl_mass((void**)result);
 	return ((!mantis) ? NULL : mantis);
 }
@@ -974,7 +979,7 @@ static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
 	i = 0;
 	l_order = ft_strlen(chr_order);
 	l_mantis = ft_strlen(mantis);
-	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + sign + 1))))
+	if (!(double_chr = (char*)malloc(sizeof(char) * (l_order + l_mantis + sign + 2))))
 		return (NULL);
 	if (sign == 1)
 	{
@@ -1056,8 +1061,8 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
 	if (ptr.doub.exp - 16383 < 64)
-		order = norm_chr_ll(f, l->precision, (int) ptr.doub.sign);
-	else if (!(order = add_to_string(ptr.doub.exp - 16383, ptr.doub.mantis, f)))
+		order = norm_chr_ll(f, l, (int) ptr.doub.sign);
+	else if (!(order = add_to_string(ptr.doub.exp - 16383, ptr.doub.mantis, f, l)))
 		return (-1);
 	if (l->precision > 0)
 	{
@@ -1072,6 +1077,7 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 		return (-1);
 	l->out_length = ft_strlen(double_num);
 	l->out = double_num;
+	l->fhash = 0;
 	chr_output(l);
 	return (1);
 }
@@ -1373,8 +1379,8 @@ int					main(int argc, char **argv)
 	int count;
 	int	count1;
 
-	count = ft_printf("%.14f\n",  9.999999999999990000);
-	count1 = printf("%.14f\n",  9.999999999999990000);
+	count = ft_printf("this %.0f float\n", 1.6);
+	count1 = printf("this %.0f float\n", 1.6);
 
 	// printf("%d\n", count);
 	// printf("%d", count1);
