@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 19:08:52 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 19:26:13 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -287,7 +287,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->spase = '0';
 	if (l->fplus > 0 && l->sp > 0)
 		l->sp = 0;
-	if (!(l->fplus && ft_memchr("dioxX", l->format[l->flag], 5)))
+	if (l->fplus && (!ft_memchr("dioxXf", l->format[l->flag], 6) || *(l->out) == '-'))
 		l->fplus = 0;
 	if (mod_compair(l->out_length, l->length) == 1 || mod_compair(l->out_length, l->length) == 0)
 		l->length = 0;
@@ -908,10 +908,12 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 			num++;
 		if (sign == 1)
 			num = -num;
-		if (l->fhash && l->precision == 0)
+		if (l->fhash > 0 && l->precision == 0 && l->dot)
 			num *= 10;
 	}
 	str = ft_itoa(num);
+	if (l->fhash && l->precision == 0)
+		str[ft_strlen(str) - 1] = '.';
 	return (str);
 }
 
@@ -1374,18 +1376,18 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	count = ft_printf("this %.0f float\n", 1.6);
-	count1 = printf("this %.0f float\n", 1.6);
+// 	count = ft_printf("%+.0f\n", -7.4);
+// 	count1 = printf("%+.0f\n", -7.4);
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	// printf("%d\n", count);
+// 	// printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
