@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 19:26:13 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 19:31:42 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,7 +281,7 @@ static char					*flag_inicializatian(t_list *l)
 		l->length = 0;
 	if (l->fzero && l->fminus)
 		l->fzero = -1;
-	if (l->fzero && l->dot > 0)
+	if (l->fzero && l->dot > 0 && l->format[l->flag] != 'f')
 		l->fzero = 0;
 	if (l->fzero > 0)
 		l->spase = '0';
@@ -1381,8 +1381,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("%+.0f\n", -7.4);
-// 	count1 = printf("%+.0f\n", -7.4);
+// 	count = ft_printf("%05.0f\n", 7.3);
+// 	count1 = printf("%05.0f\n", 7.3);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
