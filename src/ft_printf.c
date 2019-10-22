@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 15:44:16 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/22 17:18:04 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -309,8 +309,6 @@ static char					*flag_inicializatian(t_list *l)
 		else
 			l->dop = 0;
 	}
-	else if (l->precision == 0 && l->dot && *(l->out) == '0')
-		l->dop = -2;
 	if (mod_compair(l->precision, l->length) == 1)
 		count_space = mod_minus(l->precision, l->out_length);
 	if (mod_compair(l->length, l->out_length) == 1)
@@ -399,11 +397,8 @@ static int					fill_output(t_list *l, char *result)
 		l->darwin_null[l->n_count++] = ft_strlen(l->buffer_for_write) + i;
 		l->darwin_null[l->n_count] = -1;
 	}
-	if (l->dop != -2)
-		while (l->out[j])
-			result[i++] = (l)->out[j++];
-	else
-		result[l->length] = '\0';
+	while (l->out[j])
+		result[i++] = (l)->out[j++];
 	return (!(get_buffer(l, result))) ? -1 : 1;
 }
 
@@ -895,16 +890,22 @@ static int					get_binary(char **src, unsigned long a)
 	return (count);
 }
 
-static char					*norm_chr_ll(long double f)
+static char					*norm_chr_ll(long double f, int precision, int sign)
 {
 	char					*str;
-	unsigned long long int	num;
+	double long				num;
 	int						i;
 
 	num = (unsigned long long int)f;
-	str = (char*)malloc(sizeof(char) * integer_size(num));
-	if (!str)
-		return (NULL);
+	if (precision == 0)
+	{
+		f -= (long long)f;
+		f *= 10;
+		if (f >= 5)
+			num++;
+		if (sign == 1)
+			num = -num;
+	}
 	str = ft_itoa(num);
 	return (str);
 }
@@ -930,8 +931,6 @@ static char					*add_to_string(int e, unsigned long mantis_byte, long double f)
 
 	j = 0;
 	i = 0;
-	if (e < 64)
-		return (norm_chr_ll(f));
 	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
 		return (NULL);
 	count = get_binary(&mantis, mantis_byte);
@@ -1018,7 +1017,7 @@ static void					after_dot_rounding(t_list *l, char **fractional)
 static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 {
 	char					*fractional;
-	char					*ptr;
+	char					ptr;
 	double					f_ptr;
 	int						i;
 
@@ -1029,9 +1028,8 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 	while (i <= precision && e < 64)
 	{
 		f *= 10;
-		ptr = ft_itoa((long long)f);
-		fractional[i++] = *ptr;
-		free(ptr);
+		ptr = (int)f + 48;
+		fractional[i++] = ptr;
 		f -= (long long)f;
 	}
 	while (i <= precision && e >= 64)
@@ -1049,19 +1047,27 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	char					*fractional;
 	char					*double_num;
 
-	l->precision = (!l->precision) ? 6 : l->precision;
+	if (!l->dot)
+		l->precision = 6;
 	if (!(*type) || *type == 'l')
 		f = va_arg(args, double);
 	else if (*type == 'L')
 		f = va_arg(args, long double);
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
-	if (!(order = add_to_string(ptr.doub.exp - 16383, ptr.doub.mantis, f)))
+	if (ptr.doub.exp - 16383 < 64)
+		order = norm_chr_ll(f, l->precision, (int) ptr.doub.sign);
+	else if (!(order = add_to_string(ptr.doub.exp - 16383, ptr.doub.mantis, f)))
 		return (-1);
-	fractional = creat_after_dot(f, l->precision, l, ptr.doub.exp - 16383);
-	double_num = creat_double_chr(order, fractional, ptr.doub.sign);
-	free(fractional);
-	free(order);
+	if (l->precision > 0)
+	{
+		fractional = creat_after_dot(f, l->precision, l, ptr.doub.exp - 16383);
+		double_num = creat_double_chr(order, fractional, ptr.doub.sign);
+		free(fractional);
+		free(order);
+	}
+	else
+		double_num = order;
 	if (!double_num)
 		return (-1);
 	l->out_length = ft_strlen(double_num);
@@ -1367,8 +1373,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("%13.0p\n", 12340);
-// 	count1 = printf("%13.0p\n", 12340);
+// 	count = ft_printf("%15.12f\n", 4);
+// 	count1 = printf("%15.12f\n", 4);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
@@ -1376,7 +1382,7 @@ int					ft_printf(const char *format, ...)
 // }
 
 //Строки для теста
-//184467448394759384759834795738475983438746587234879560283764587632487568s3624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
+//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
 //"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
 //"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
