@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 18:30:25 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 19:36:25 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,7 +284,7 @@ static int					get_buffer(t_list *l, char *new_str)
 static void					flag_config(t_list *l)
 {
 	if (l->format[l->flag] == 'f')
-		l->hash = 0;
+		l->fhash = 0;
 	if (l->precision < 0)
 		l->length = 0;
 	if (l->fzero && l->fminus)
@@ -997,7 +997,7 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 	{
 		f -= (long long)f;
 		f *= 10;
-		num = (f >= 5) ? num++ : num;
+		num = (f >= 5) ? num + 1 : num;
 		num = (sign == 1) ? -num : num;
 		if (l->fhash > 0 && l->precision == 0 && l->dot)
 			num *= 10;
@@ -1244,9 +1244,8 @@ static char				*type_define(int lon, int shor, char flag)
 {
 	char			*type;
 
-	if ((lon && shor) || lon > 2 || shor > 2)
-		type = "ll";
-	else if ((lon == -1 || shor == -1) || (lon == 2 && !shor))
+	if ((lon && shor) || lon > 2 || shor > 2 
+		|| lon == -1 || shor == -1 || (lon == 2 && !shor))
 		type = "ll";
 	else if (lon == 1 && !shor)
 		type = "l";
@@ -1259,13 +1258,8 @@ static char				*type_define(int lon, int shor, char flag)
 	return (type);
 }
 
-static char				*type_parse(t_list *l)
+static char				*type_parse(t_list *l, int lon, int shor)
 {
-	int				lon;
-	int				shor;
-	
-	lon = 0;
-	shor = 0;
 	while (ft_memchr("Llh", l->format[l->type], 3))
 	{
 		if (l->format[l->type] == 'l')
@@ -1378,7 +1372,7 @@ static int					specs_and_flags_fing(va_list args, t_list *l)
 	{
 		if (ft_memchr("Llh", l->format[l->type], 3)
 			&& !ft_memchr("csp", l->format[l->flag], 3))
-			type = type_parse(l);
+			type = type_parse(l, 0, 0);
 		else
 			type = "";
 		l->i = l->flag;
@@ -1403,7 +1397,8 @@ static int					ft_variants(va_list args, t_list *l)
 			if (l->format[l->i] == '%' && l->format[l->i - 1] == '%')
 			{
 				l->free_block = 1;
-				get_buffer(l, "%");
+				if (!(get_buffer(l, "%")))
+					return (-1);
 			}
 			l->start = 0;
 		}
@@ -1435,8 +1430,7 @@ static int			add_anytext_tobuff(t_list *l)
 		count--;
 	}
 	simple_text[j] = '\0';
-	get_buffer(l, simple_text);
-	return (1);
+	return (get_buffer(l, simple_text) ? 1 : -1);
 }
 
 static void			dawrin_nulls(t_list *l)
@@ -1491,18 +1485,18 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
+// int					main(int argc, char **argv)
+// {
+// 	int count;
+// 	int	count1;
 
-	count = ft_printf("%f\n", 1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460);
-	count1 = printf("%f\n", 1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460);
+// 	count = printf("%#.0f\n", 7.4);
+// 	count1 = ft_printf("%#.0f\n", 7.4);
 
-	// printf("%d\n", count);
-	// printf("%d", count1);
-	return (0);
-}
+// 	printf("%d\n", count);
+// 	printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
