@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 13:29:39 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 16:20:34 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ static int						mod_minus(int a, int b)
 	return (a);
 }
 
-static unsigned long long					to_power(unsigned long long a, int power)
+static unsigned long long		to_power(unsigned long long a, int power)
 {
 	if (power == 0)
 		return (1);
@@ -74,7 +74,7 @@ static unsigned long long					to_power(unsigned long long a, int power)
 	return (a);
 }
 
-static void					zero_flags(t_list *l)
+static void						zero_flags(t_list *l)
 {
 	l->precision_minus = 0;
 	l->fhash = 0;
@@ -116,7 +116,7 @@ static t_list					*struct_init(const char *format)
 	return (l);
 }
 
-static char				*ft_strndup(const char *str, int start, int end)
+static char					*ft_strndup(const char *str, int start, int end)
 {
 	int				i;
 	int				length;
@@ -137,7 +137,7 @@ static char				*ft_strndup(const char *str, int start, int end)
 	return (ptr);
 }
 
-static char				*ft_str_rev(char **str)
+static char					*ft_str_rev(char **str)
 {	
 	char			*str_reverse;
 	int				size;
@@ -379,8 +379,8 @@ static int					add_min_or_plus(t_list *l, char **result)
 	else if (*(l->out) == '-' && l->spase == ' ' && (l->length > 0 || l->precision > 0))
 	{
 		if (l->length > 0)
-			i = l->length - l->out_length - (l->precision > 0 ? l->precision - l->out_length : 0)
-				- (l->precision > 0 ? 1 : 0);
+			i = l->length - l->out_length -
+				(l->precision > 0 ? l->precision - l->out_length : 0) - (l->precision > 0 ? 1 : 0);
 		(*result)[i++] = '-';
 		l->length = mod_minus(l->length, 1);
 		l->out_length--;
@@ -561,35 +561,34 @@ static int						output_u_flags(va_list args,
 	return (1);
 }
 
+static void						zero_res_xo_flags(t_list *l)
+{
+	if (l->dot > 0 && l->precision == 0)
+	{
+		*(l->out) = '\0';
+		l->out_length = 0;
+		if (l->format[l->flag] == 'x')
+			l->fhash = 0;
+	}
+	else
+		l->fhash = 0;
+}
+
 static int						output_xo_flags(va_list args,
 									t_list *l, char *type)
 {
 	unsigned long long	xo;
-	char				*output;
-	int					count;
-	int					num_system;
 
 	xo = va_arg(args, unsigned long long);
 	if (!(*type))
-		output = decimy_to_any((unsigned int)xo, ft_num_sys(l->format[l->i]), l->format[l->i]);
+		l->out = decimy_to_any((unsigned int)xo, ft_num_sys(l->format[l->i]), l->format[l->i]);
 	else
-		output = choose_length_chr(type, decimy_to_any, xo, l->format[l->i]);
-	if (!output)
+		l->out = choose_length_chr(type, decimy_to_any, xo, l->format[l->i]);
+	if (!l->out)
 		return (-1);
-	l->out_length = ft_strlen(output);
-	l->out = output;
+	l->out_length = ft_strlen(l->out);
 	if (*(l->out) == '0')
-	{
-		if (l->dot > 0 && l->precision == 0)
-		{
-			*(l->out) = '\0';
-			l->out_length = 0;
-			if (l->format[l->flag] == 'x')
-				l->fhash = 0;
-		}
-		else
-			l->fhash = 0;
-	}
+		zero_res_xo_flags(l);
 	else if (l->precision > l->out_length && l->format[l->flag] == 'o')
 		l->fhash = 0;
 	chr_output(l);
@@ -621,39 +620,38 @@ static int						output_p_flags(va_list args,
 	return (1);
 }
 
+static void					s_flag_config(t_list *l, va_list args)
+{
+	l->out = va_arg(args, char*);
+	l->out = (l->out == NULL) ? "(null)" : l->out;
+	l->out_length = ft_strlen(l->out);
+	if (l->dot && l->precision < l->out_length)
+	{
+		l->out = ft_strndup(l->out, 0, l->precision - 1);
+		l->out_length = l->precision;
+		l->cut_s = 1;
+		l->free_block = 0;
+	}
+	else if (l->precision == 0 && l->dot != 0)
+		l->out_length = 0;
+}
+
 static int					output_cs_flags(va_list args, t_list *l)
 {
-	char			*str;
 	char			c;
 
-	l->out_length = 1;
 	l->free_block = 1;
 	if (l->format[l->i] == 's')
-	{
-		str = va_arg(args, char*);
-		if (str == NULL)
-			str = "(null)";
-		l->out_length = ft_strlen(str);
-		if (l->dot && l->precision < l->out_length)
-		{
-			str = ft_strndup(str, 0, l->precision - 1);
-			l->out_length = l->precision;
-			l->cut_s = 1;
-			l->free_block = 0;
-		}
-		else if (l->precision == 0 && l->dot != 0)
-			l->out_length = 0;
-	}
+		s_flag_config(l, args);
 	else
 	{
-		if (!(str = (char*)malloc(sizeof(char) * 2)))
+		if (!(l->out = (char*)malloc(sizeof(char) * 1)))
 			return (-1);
 		c = va_arg(args, int);
-		str[0] = c;
-		str[1] = '\0';
+		*(l->out) = c;
 		l->free_block = (c == 0) ? 1 : 0;
+		l->out_length = 1;
 	}
-	l->out = str;
 	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] != 'c')
 	{
 		if (l->length == 0)
@@ -677,7 +675,7 @@ static void					*free_doub_lvl_mass(void **mas)
 	while (ptr[i] != NULL)
 		free(ptr[i++]);
 	free(ptr);
-	return ("gg");
+	return (NULL);
 }
 
 static int					size_int_mass(int *a)
@@ -773,24 +771,16 @@ static char		 			*get_bn_str(int **result, t_list *l, int sign)
 	char					*str;
 	int						i;
 	
-	if (!result)
-		return (NULL);
 	if (!(a = add_ll_parts(result[0], result[1], size_int_mass(result[0]),
 		size_int_mass(result[1]))))
-	{
-		free_doub_lvl_mass((void**)result);
-		return (NULL);
-	}
+		return (free_doub_lvl_mass((void**)result));
 	i = 2;
 	while (result[i] != NULL)
 	{
 		b = add_ll_parts(a, result[i], size_int_mass(a), size_int_mass(result[i]));
 		free(a);
 		if (!b)
-		{
-			free_doub_lvl_mass((void**)result);
-			return (NULL);
-		}
+			return (free_doub_lvl_mass((void**)result));
 		a = b;
 		i++;
 	}
@@ -801,19 +791,16 @@ static char		 			*get_bn_str(int **result, t_list *l, int sign)
 	return (str);
 }
 
-static int					*long_multi(int *a, int *b, int a_size, int b_size)
+static int					*long_to_long(int *a, int *b, int a_size, int b_size)
 {
 	unsigned long long		cur;
 	unsigned long long		cr;
-	int 					*result;
-	int						c[1024];
+	int						*c;
 	int						i;
 	int						j;
-
+	
 	i = 0;
-	while (i < (a_size + b_size + 1))
-		c[i++] = 0;
-	if (!(result = creat_res(a_size + b_size + 1)))
+	if (!(c = creat_res(a_size + b_size + 1)))
 		return (NULL);
 	i = 0;
 	while (i < a_size)
@@ -829,8 +816,23 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 		}
 		i++;
 	}
-	i = a_size + b_size - 1;
+	return (&(c[0]));
+}
+
+static int					*long_multi(int *a, int *b, int a_size, int b_size)
+{
+	int 					*result;
+	int						*c;
+	int						i;
+	int						j;
+
+	i = 0;
 	j = 0;
+	if (!(result = creat_res(a_size + b_size + 1)))
+		return (NULL);
+	if (!(c = long_to_long(a, b, a_size, b_size)))
+		return (NULL);
+	i = a_size + b_size - 1;
 	while (c[i] == 0)
 		i--;
 	while (j <= i)
@@ -842,28 +844,19 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 	return (result);
 }
 
-static int					**get_bignum(t_num_parts ***num, int count)
+static int					**calculations_bn(t_num_parts ***num, int count, int **result, int j)
 {
-	int						**result;
 	int						*a;
 	int						*b;
 	int						i;
-	int						j;
 
-	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
-		return (NULL);
-	result[count + 1] = NULL;
-	j = 0;
-	while (count >= 0)
+	while (count-- >= 0)
 	{
 		i = 0;
 		a = long_multi(((*num)[count])->num_part[i], ((*num)[count])->num_part[i + 1],
 			size_int_mass(((*num)[count])->num_part[i]), size_int_mass(((*num)[count])->num_part[i + 1]));
 		if (!a)
-		{
-			free_doub_lvl_mass((void**)result);
-			return (NULL);
-		}
+			return (free_doub_lvl_mass((void**)result));
 		i++;
 		while (((*num)[count])->size > 2 && ((*num)[count])->num_part[i + 1] != NULL)
 		{
@@ -871,16 +864,30 @@ static int					**get_bignum(t_num_parts ***num, int count)
 				size_int_mass(((*num)[count])->num_part[i + 1]));
 			free(a);
 			if (!b)
-			{
-				free_doub_lvl_mass((void**)result);
-				return (NULL);
-			}
+				return (free_doub_lvl_mass((void**)result));
 			a = b;
 			i++;
 		}
 		result[j++] = a;
-		count--;
 	}
+	return (result);
+}
+
+static int					**get_bignum(t_num_parts ***num, int count)
+{
+	int						**result;
+	int						j;
+
+	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
+		return (NULL);
+	result[count + 1] = NULL;
+	if (count == 0)
+	{
+		*result = ((*num)[count])->num_part[0];
+		return (result);
+	}
+	if (!(result = calculations_bn(num, count, result, j)))
+		return (NULL);
 	return (result);
 }
 
@@ -1481,18 +1488,18 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-// int					main(int argc, char **argv)
-// {
-// 	int count;
-// 	int	count1;
+int					main(int argc, char **argv)
+{
+	int count;
+	int	count1;
 
-// 	count = ft_printf("this %+d number\n", 267);
-// 	count1 = printf("this %+d number\n", 267);
+	count = ft_printf("%f\n", 1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460);
+	count1 = printf("%f\n", 1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460);
 
-// 	// printf("%d\n", count);
-// 	// printf("%d", count1);
-// 	return (0);
-// }
+	// printf("%d\n", count);
+	// printf("%d", count1);
+	return (0);
+}
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
