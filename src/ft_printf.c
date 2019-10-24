@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 16:20:34 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 16:35:53 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -850,13 +850,12 @@ static int					**calculations_bn(t_num_parts ***num, int count, int **result, in
 	int						*b;
 	int						i;
 
-	while (count-- >= 0)
+	while (count >= 0)
 	{
 		i = 0;
-		a = long_multi(((*num)[count])->num_part[i], ((*num)[count])->num_part[i + 1],
-			size_int_mass(((*num)[count])->num_part[i]), size_int_mass(((*num)[count])->num_part[i + 1]));
-		if (!a)
-			return (free_doub_lvl_mass((void**)result));
+		if (!(a = long_multi(((*num)[count])->num_part[i], ((*num)[count])->num_part[i + 1],
+			size_int_mass(((*num)[count])->num_part[i]), size_int_mass(((*num)[count])->num_part[i + 1]))))
+				return (free_doub_lvl_mass((void**)result));
 		i++;
 		while (((*num)[count])->size > 2 && ((*num)[count])->num_part[i + 1] != NULL)
 		{
@@ -869,6 +868,7 @@ static int					**calculations_bn(t_num_parts ***num, int count, int **result, in
 			i++;
 		}
 		result[j++] = a;
+		count--;
 	}
 	return (result);
 }
@@ -913,13 +913,12 @@ static int					*by_rank(unsigned long long int num)
 	return(result);
 }
 
-static t_num_parts			*mantis_part_to_mult(int e)
+static t_num_parts			*creat_num_part(int	e)
 {
 	t_num_parts				*ptr;
 	int						count;
-	int						i;
 
-	i = 0;
+	count = 0;
 	if (e / 64 <= 0)
 		count = 2;
 	else if (e / 64 > 0)
@@ -927,6 +926,17 @@ static t_num_parts			*mantis_part_to_mult(int e)
 	ptr = (t_num_parts*)malloc(sizeof(t_num_parts));
 	ptr->num_part = (int**)malloc(sizeof(int*) * (count + 1));
 	if (!(ptr) || !(ptr->num_part))
+		return (NULL);
+	return (ptr);
+}
+
+static t_num_parts			*mantis_part_to_mult(int e)
+{
+	t_num_parts				*ptr;
+	int						i;
+
+	i = 0;
+	if (!(ptr = creat_num_part(e)))
 		return (NULL);
 	while (e > 0)
 	{
