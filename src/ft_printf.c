@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 16:35:53 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 16:57:18 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -940,16 +940,9 @@ static t_num_parts			*mantis_part_to_mult(int e)
 		return (NULL);
 	while (e > 0)
 	{
-		if (e >= 64)
-		{
-			ptr->num_part[i++] = by_rank(18446744073709551615L);
-			e -= 64;
-		}
-		else
-		{
-			ptr->num_part[i++] = by_rank(to_power(2, e));
-			e = 0;
-		}
+		ptr->num_part[i++] = (e >= 64)
+			? by_rank(18446744073709551615L) : by_rank(to_power(2, e));
+		e -= (e >= 64) ? 64 : e;
 		if (!ptr->num_part[i - 1])
 		{
 			free_doub_lvl_mass((void**)(ptr->num_part));
@@ -1004,16 +997,13 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 	{
 		f -= (long long)f;
 		f *= 10;
-		if (f >= 5)
-			num++;
-		if (sign == 1)
-			num = -num;
+		num = (f >= 5) ? num++ : num;
+		num = (sign == 1) ? -num : num;
 		if (l->fhash > 0 && l->precision == 0 && l->dot)
 			num *= 10;
 	}
 	str = ft_itoa(num);
-	if (l->fhash && l->precision == 0)
-		str[ft_strlen(str) - 1] = '.';
+	(l->fhash && l->precision == 0) ? str[ft_strlen(str) - 1] = '.' : 1;
 	return (str);
 }
 
