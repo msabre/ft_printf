@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 16:57:18 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 18:30:25 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,6 +283,8 @@ static int					get_buffer(t_list *l, char *new_str)
 
 static void					flag_config(t_list *l)
 {
+	if (l->format[l->flag] == 'f')
+		l->hash = 0;
 	if (l->precision < 0)
 		l->length = 0;
 	if (l->fzero && l->fminus)
@@ -482,7 +484,8 @@ static int					chr_output(t_list *l)
 
 	if (!(result = flag_inicializatian(l)))
 		return (-1);
-	fill_output(l, result);
+	if (!(fill_output(l, result)))
+		return (-1);
 	(l->free_block == 0) ? free(l->out) : 1;
 	return (1);
 }
@@ -537,8 +540,7 @@ static int						output_di_flags(va_list args,
 		l->out_length = 0;
 	}
 	l->out = d_chr;
-	chr_output(l);
-	return (1);
+	return (chr_output(l));
 }
 
 static int						output_u_flags(va_list args,
@@ -557,8 +559,7 @@ static int						output_u_flags(va_list args,
 		return (-1);
 	l->out_length = ft_strlen(out);
 	l->out = out;
-	chr_output(l);
-	return (1);
+	return (chr_output(l));
 }
 
 static void						zero_res_xo_flags(t_list *l)
@@ -591,8 +592,7 @@ static int						output_xo_flags(va_list args,
 		zero_res_xo_flags(l);
 	else if (l->precision > l->out_length && l->format[l->flag] == 'o')
 		l->fhash = 0;
-	chr_output(l);
-	return (1);
+	return (chr_output(l));
 }
 
 static int						output_p_flags(va_list args,
@@ -616,8 +616,7 @@ static int						output_p_flags(va_list args,
 		l->out_length = 0;
 		*(l->out) = '\0';
 	}
-	chr_output(l);
-	return (1);
+	return (chr_output(l));
 }
 
 static void					s_flag_config(t_list *l, va_list args)
@@ -816,7 +815,7 @@ static int					*long_to_long(int *a, int *b, int a_size, int b_size)
 		}
 		i++;
 	}
-	return (&(c[0]));
+	return (c);
 }
 
 static int					*long_multi(int *a, int *b, int a_size, int b_size)
@@ -878,6 +877,7 @@ static int					**get_bignum(t_num_parts ***num, int count)
 	int						**result;
 	int						j;
 
+	j = 0;
 	if (!(result = (int**)malloc(sizeof(int*) * (count + 2))))
 		return (NULL);
 	result[count + 1] = NULL;
@@ -1017,28 +1017,13 @@ static void					free_struct(t_num_parts **mant_exp)
 	free(mant_exp);
 }
 
-static char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
-{	
-	t_num_parts				**mant_exp;
-	char					*mantis;
-	int						**result;
-	int						count;
-	int						e;
+static t_num_parts			**get_and_fill_numparts(t_num_parts **mant_exp, char *mantis, int e)
+{
 	int						i;
 	int						j;
 
 	j = 0;
 	i = 0;
-	e = ptr->doub.exp - 16383;
-	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
-		return (NULL);
-	count = get_binary(&mantis, ptr->doub.mantis);
-	if (!(mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1))))
-	{
-		free(mantis);
-		return (NULL);
-	}
-	mant_exp[count] = NULL;
 	while (i <= 63)
 	{
 		if (mantis[i] == '1')
@@ -1053,14 +1038,35 @@ static char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
 		i++;
 	}
 	free(mantis);
+	return (mant_exp);
+}
+
+static char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
+{	
+	t_num_parts				**mant_exp;
+	char					*mantis;
+	int						**result;
+	int						count;
+
+	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
+		return (NULL);
+	count = get_binary(&mantis, ptr->doub.mantis);
+	if (!(mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1))))
+	{
+		free(mantis);
+		return (NULL);
+	}
+	if (!(mant_exp = get_and_fill_numparts(mant_exp, mantis, ptr->doub.exp - 16383)))
+		return (NULL);
+	mant_exp[count] = NULL;
 	result = get_bignum(&mant_exp, count - 1);
 	free_struct(mant_exp);
-	if (result[1] == NULL)
+	if (count == 1)
 		mantis = str_fr_intmass(*result, size_int_mass(*result), l, ptr->doub.sign);
 	else
 		mantis = get_bn_str(result, l, ptr->doub.sign);
 	free_doub_lvl_mass((void**)result);
-	return ((!mantis) ? NULL : mantis);
+	return (!mantis ? NULL : mantis);
 }
 
 static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
@@ -1144,14 +1150,10 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	long double				f;
 	char					*order;
 	char					*fractional;
-	char					*double_num;
 
-	if (!l->dot)
-		l->precision = 6;
-	if (!(*type) || *type == 'l')
-		f = va_arg(args, double);
-	else if (*type == 'L')
-		f = va_arg(args, long double);
+	(!l->dot) ? l->precision = 6 : 1;
+	(!(*type) || *type == 'l') ? f = va_arg(args, double) : 1;
+	(*type == 'L') ? f = va_arg(args, long double) : 1;
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
 	if (ptr.doub.exp - 16383 < 64)
@@ -1161,19 +1163,14 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	if (l->precision > 0)
 	{
 		fractional = creat_after_dot(f, l->precision, l, ptr.doub.exp - 16383);
-		double_num = creat_double_chr(order, fractional, ptr.doub.sign);
+		l->out = creat_double_chr(order, fractional, ptr.doub.sign);
 		free(fractional);
 		free(order);
 	}
 	else
-		double_num = order;
-	if (!double_num)
-		return (-1);
-	l->out_length = ft_strlen(double_num);
-	l->out = double_num;
-	l->fhash = 0;
-	chr_output(l);
-	return (1);
+		l->out = order;
+	l->out_length = ft_strlen(l->out);
+	return (!l->out ? -1 : chr_output(l));
 }
 
 static int					output_b_flags(va_list args, t_list *l, char *type)
@@ -1457,6 +1454,16 @@ static void			dawrin_nulls(t_list *l)
 	}
 }
 
+static int			print_output(int length, t_list *l)
+{
+	length = (l->i == length) ? ft_strlen(l->buffer_for_write) : 0;
+	(l->n_count > 0) ? dawrin_nulls(l) : 1;
+	(length > 0) ? write(1, l->buffer_for_write, length) : 1;
+	free(l->buffer_for_write);
+	free(l);
+	return (length);
+}
+
 int					ft_printf(const char *format, ...)
 {
 	va_list			args;
@@ -1479,12 +1486,8 @@ int					ft_printf(const char *format, ...)
 			if (!(add_anytext_tobuff(l)))
 				break ;
 	}
-	length = (l->i == length) ? ft_strlen(l->buffer_for_write) : 0;
-	(l->n_count > 0) ? dawrin_nulls(l) : 1;
-	if (length > 0)
-		write(1, l->buffer_for_write, length);
-	free(l->buffer_for_write);
-	free(l);
+	length = print_output(length, l);
+	va_end(args);
 	return (length);
 }
 
