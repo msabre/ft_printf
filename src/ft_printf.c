@@ -6,11 +6,12 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 19:31:42 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 13:29:39 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <limits.h>
+#include <float.h>
 #include "../includes/ft_printf.h"
 
 static int						ft_isnum(char c, int exception)
@@ -163,15 +164,31 @@ static char				*ft_str_rev(char **str)
 	return (str_reverse);
 }
 
-static char					*decimy_to_any(unsigned long long num_integer, int num_system, char flag)
+static char					*get_newbase_res(unsigned long long num_integer,
+								int num_system, char *result, int alp_register)
+{
+	int						digit;
+	int						index;
+
+	index = 0;
+	while (num_integer)
+	{
+		digit = num_integer % num_system;
+		digit = (digit > 9) ? alp_register + (digit % 10) - 48 : digit;
+		result[index++] = digit + 48;
+		num_integer /= num_system;
+	}
+	result[index] = '\0';
+	return (result);
+}
+
+static char					*decimy_to_any(unsigned long long num_integer,
+								int num_system, char flag)
 {
 	char				*result;
 	char				*result_reverse;
 	int					alp_register;
-	int					index;
-	int					digit;
 	
-	index = 0;
 	alp_register = 65;
 	(flag == 'x') ? alp_register = 97 : alp_register;
 	if (!(result = (char*)malloc(sizeof(char) * 300)))
@@ -181,15 +198,7 @@ static char					*decimy_to_any(unsigned long long num_integer, int num_system, c
 		*result = '0';
 		return (result);
 	}
-	while (num_integer)
-	{
-		digit = num_integer % num_system;
-		(digit > 9) ? digit = alp_register + (digit % 10) - 48 : digit;
-		result[index] = digit + 48;
-		num_integer /= num_system;
-		index++;
-	}
-	result[index] = '\0';
+	get_newbase_res(num_integer, num_system, result, alp_register);
 	if (!(result_reverse = ft_str_rev(&result)))
 		return (NULL);
 	free(result);
@@ -251,6 +260,7 @@ static int						ft_num_sys(char flag)
 	int num_system;
 
 	num_system = 0;
+	(flag == 'b') ? num_system = 2 : num_system;
 	(flag == 'x' || flag == 'X') ? num_system = 16 : num_system;
 	(flag == 'o') ? num_system = 8 : num_system;
 	return (num_system);
@@ -271,12 +281,8 @@ static int					get_buffer(t_list *l, char *new_str)
 	return (1);
 }
 
-static char					*flag_inicializatian(t_list *l)
+static void					flag_config(t_list *l)
 {
-	int						count_space;
-	char					*result;
-
-	count_space = 0;
 	if (l->precision < 0)
 		l->length = 0;
 	if (l->fzero && l->fminus)
@@ -287,28 +293,39 @@ static char					*flag_inicializatian(t_list *l)
 		l->spase = '0';
 	if (l->fplus > 0 && l->sp > 0)
 		l->sp = 0;
-	if (l->fplus && (!ft_memchr("dioxXf", l->format[l->flag], 6) || *(l->out) == '-'))
+	if (l->fplus && (!ft_memchr("dioxXf", l->format[l->flag], 6)
+		|| *(l->out) == '-'))
 		l->fplus = 0;
-	if (mod_compair(l->out_length, l->length) == 1 || mod_compair(l->out_length, l->length) == 0)
+	if (mod_compair(l->out_length, l->length) == 1
+		|| mod_compair(l->out_length, l->length) == 0)
 		l->length = 0;
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
-	if (mod_compair(l->out_length, l->precision) == 1 || ft_memchr("cs", l->format[l->flag], 2))
+	if (mod_compair(l->out_length, l->precision) == 1
+		|| ft_memchr("cs", l->format[l->flag], 2))
 		l->precision = 0;
 	if (l->sp > 0 && *(l->out) == '-')
 		l->sp = 0;
-	if (l->fhash)
-	{
-		if (l->format[l->flag] == 'o')
-			l->hash = "0";
-		else
-			l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
-		l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
-		if (l->spase == ' ' && l->length > 0 && l->length - l->out_length >= l->dop_count)
-			l->dop = l->length - (l->precision > l->out_length ? l->precision : l->out_length) - l->dop_count;
-		else
-			l->dop = 0;
-	}
+}
+
+static void					fhash_config(t_list * l)
+{
+	if (l->format[l->flag] == 'o')
+		l->hash = "0";
+	else
+		l->hash = (l->format[l->flag] != 'X' ) ? "0x" : "0X";
+	l->dop_count = (l->format[l->flag] == 'o') ? 1 : 2;
+	if (l->spase == ' ' && l->length > 0 && l->length - l->out_length >= l->dop_count)
+		l->dop = l->length - (l->precision > l->out_length ? l->precision : l->out_length) - l->dop_count;
+	else
+		l->dop = 0;
+}
+
+static int					get_count_spaces(t_list *l)
+{
+	int						count_space;
+
+	count_space = 0;
 	if (mod_compair(l->precision, l->length) == 1)
 		count_space = mod_minus(l->precision, l->out_length);
 	if (mod_compair(l->length, l->out_length) == 1)
@@ -318,8 +335,20 @@ static char					*flag_inicializatian(t_list *l)
 	}
 	if (mod_compair(l->dop_count, count_space) == 1)
 		count_space = 0;
-	count_space = (l->dop >= 0 && mod_compair(count_space, l->dop_count) == 1 && l->length) ? mod_minus(count_space, l->dop_count) : count_space;
+	count_space = (l->dop >= 0 && mod_compair(count_space, l->dop_count) == 1 && l->length)
+					? mod_minus(count_space, l->dop_count) : count_space;
 	count_space *= (count_space < 0) ? -1 : 1;
+	return (count_space);
+}
+static char					*flag_inicializatian(t_list *l)
+{
+	int						count_space;
+	char					*result;
+
+	flag_config(l);
+	if (l->fhash)
+		fhash_config(l);
+	count_space = get_count_spaces(l);
 	if (*(l->out) == '-' && l->precision > 0 && l->length == 0)
 		count_space++;
 	if (l->sp > 0 && l->precision >= l->length && l->length >= 0)
@@ -332,71 +361,115 @@ static char					*flag_inicializatian(t_list *l)
 	return (result);
 }
 
-static int					fill_output(t_list *l, char *result)
+static int					add_min_or_plus(t_list *l, char **result)
 {
-	int						j;
 	int						i;
-	int						minus;
-	int						length;
-	int						prec;
-
-	i = (l->spase == ' ' && l->fplus > 0 && l->length > 0) ? l->length - l->out_length - l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0) : 0;
-	(l->fplus > 0) ? result[i++] = '+' : 0;
+	int						j;
+	
 	j = 0;
-	minus = 0;
+	i = (l->spase == ' ' && l->fplus > 0 && l->length > 0)
+		? l->length - l->out_length - l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0) : 0;
 	if (*(l->out) == '-' && l->spase == '0')
 	{
-		result[i++] = '-';
-		j++;
-		minus++;
+		(*result)[i++] = '-';
 		l->length = mod_minus(l->length, 1);
 		l->out_length--;
+		j++;
 	}
 	else if (*(l->out) == '-' && l->spase == ' ' && (l->length > 0 || l->precision > 0))
 	{
 		if (l->length > 0)
-			i = l->length - l->out_length - (l->precision > 0 ? l->precision - l->out_length : 0) - (l->precision > 0 ? 1 : 0);
-		result[i++] = '-';
+			i = l->length - l->out_length - (l->precision > 0 ? l->precision - l->out_length : 0)
+				- (l->precision > 0 ? 1 : 0);
+		(*result)[i++] = '-';
 		l->length = mod_minus(l->length, 1);
-		minus++;
 		l->out_length--;
 		j++;
 	}
-	(l->hash) ? ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash) : 0;
-	i = (l->spase == ' ' ? 0 : minus) + (l->spase == ' ' && l->length > 0 ? 0 : l->fplus) + l->sp + (l->precision > 0 && l->length < 0 ? l->precision - l->out_length : 0) + ((l->length < 0) ? l->out_length : 0);
-	if (l->length != 0)
-		length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp - l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0);
 	else
-		length = 0;
+		(l->fplus > 0) ? (*result)[i++] = '+' : 0;
+	return (j);
+}
+
+static int					add_len_to_out(t_list *l, char **result, int minus)
+{
+	int						i;
+	int						length;
+	
+	i = (l->spase == ' ' ? 0 : minus) + (l->spase == ' ' && l->length > 0 ? 0 : l->fplus)
+		+ l->sp + (l->precision > 0 && l->length < 0 ? l->precision - l->out_length : 0)
+			+ ((l->length < 0) ? l->out_length : 0);
+	length = (l->length * (l->length < 0 ? -1 : 1)) - l->out_length - l->dop_count - l->sp
+			- l->fplus - (l->precision > 0 ? l->precision - l->out_length : 0);
 	(l->dop >= 0 && (l->spase == '0' || l->fminus)) ? i += l->sp + l->dop_count : 1;
 	while (length > 0)
 	{
-		result[i++] = l->spase;
+		(*result)[i++] = l->spase;
 		length--;
 	}
-	if (l->precision != 0)
-	{
-		prec = l->precision * (l->precision < 0 ? -1 : 1);
-		i = (l->length <= 0 && l->precision > 0 ? l->fplus : 0) + l->sp + minus + l->dop_count + (l->length > 0 && l->spase == '0' ? l->length - l->precision : 0) + (l->spase == ' ' && l->length > 0 ? l->length - l->precision - l->dop_count : 0);
-		if (l->precision < 0)
-			i += l->out_length;
-		length = prec - l->out_length - (l->precision > 0 && l->precision > l->length && l->spase == '0' ? l->dop_count : 0);
-		l->spase = (l->precision > 0) ? '0' : ' ';
-		while (length-- > 0)
-			result[i++] = l->spase;
-	}
+	return (i);
+}
+
+static int					add_precision(t_list *l, char **result, int minus)
+{
+	int						length;
+	int						prec;
+	int						i;
+
+	prec = l->precision * (l->precision < 0 ? -1 : 1);
+	i = (l->length <= 0 && l->precision > 0 ? l->fplus : 0) + l->sp + minus + l->dop_count
+		+ (l->length > 0 && l->spase == '0' ? l->length - l->precision : 0) +
+			(l->spase == ' ' && l->length > 0 ? l->length - l->precision - l->dop_count : 0);
+	if (l->precision < 0)
+		i += l->out_length;
+	length = prec - l->out_length - (l->precision > 0
+		&& l->precision > l->length && l->spase == '0' ? l->dop_count : 0);
+	l->spase = (l->precision > 0) ? '0' : ' ';
+	while (length-- > 0)
+		(*result)[i++] = l->spase;
+	return (i);
+}
+
+static int					position_after_outadd(t_list *l, int minus, int i)
+{
 	if (l->cut_s == 1 && l->format[l->flag] == 's' && l->length > 0)
 		i = l->fplus + l->sp + (l->length - l->out_length);
 	if (l->length <= 0 && l->precision == 0)
 		i = minus + l->fplus + l->sp + (l->dop >= 0 ? l->dop + l->dop_count : 0);
 	else
-		i += (l->fplus && l->spase != '0' ? 1 : 0) + ((l->dop >= 0 && l->spase != '0') ? l->dop_count : 0) + (j > 0 && l->length > 0 && l->spase != '0' ? minus : 0);
+		i += (l->fplus && l->spase != '0' ? 1 : 0) +
+			(l->dop >= 0 && l->spase != '0' ? l->dop_count : 0)
+				+ (minus > 0 && l->length > 0 && l->spase != '0' ? minus : 0);
 	if (ft_strcmp(l->out, "") == 0 && l->format[l->flag] == 'c')
 	{
 		l->out = "0";
 		l->darwin_null[l->n_count++] = ft_strlen(l->buffer_for_write) + i;
 		l->darwin_null[l->n_count] = -1;
 	}
+	return (i);
+}
+
+static int					fill_output(t_list *l, char *result)
+{
+	int						j;
+	int						i;
+	int						minus;
+
+	minus = 0;
+	j = 0;
+	if (*(l->out) == '-' || l->fplus)
+	{
+		j = add_min_or_plus(l, &result);
+		if (j > 0)
+			minus = 1;
+	}
+	if (l->hash)
+		ft_strcat(&(result[(l->dop >= 0 ? l->dop : 0)]), l->hash);
+	if (l->length != 0)
+		i = add_len_to_out(l, &result, minus);
+	if (l->precision != 0)
+		i = add_precision(l, &result, minus);
+	i = position_after_outadd(l, minus, i);
 	while (l->out[j])
 		result[i++] = (l)->out[j++];
 	return (!(get_buffer(l, result))) ? -1 : 1;
@@ -670,7 +743,7 @@ static int					*add_ll_parts(int *a, int *b, int a_size, int b_size)
 	return (result);
 }
 
-static char					*str_fr_intmass(int	*a, int size, t_list *l)
+static char					*str_fr_intmass(int	*a, int size, t_list *l, int sign)
 {
 	char					*str;
 	int						i;
@@ -679,9 +752,12 @@ static char					*str_fr_intmass(int	*a, int size, t_list *l)
 	if (!a)
 		return (NULL);
 	size = (l->fhash && l->precision == 0) ? size++ : size;
-	if (!(str = (char*)malloc(sizeof(char) * (size + 1))))
+	sign = (l->precision == 0) ? sign : 0;
+	if (!(str = (char*)malloc(sizeof(char) * (size + sign + 1))))
 		return (NULL);
-	size -= 2;
+	size -= (l->fhash && l->precision == 0) ? 2 : 1;
+	if (sign == 1)
+		str[i++] = '-';
 	while (size >= 0)
 		str[i++] = a[size--] + 48;
 	if (l->fhash && l->precision == 0)
@@ -690,7 +766,7 @@ static char					*str_fr_intmass(int	*a, int size, t_list *l)
 	return (str);
 }
 
-static char		 			*get_bn_str(int **result, t_list *l)
+static char		 			*get_bn_str(int **result, t_list *l, int sign)
 {
 	int						*a;
 	int						*b;
@@ -718,7 +794,7 @@ static char		 			*get_bn_str(int **result, t_list *l)
 		a = b;
 		i++;
 	}
-	str = str_fr_intmass(a, size_int_mass(a), l);
+	str = str_fr_intmass(a, size_int_mass(a), l, sign);
 	free(a);
 	if (!str)
 		return (NULL);
@@ -900,6 +976,13 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 	int						i;
 
 	num = (unsigned long long int)f;
+	if (num == 0 && sign == 1 && l->precision  == 0)
+	{
+		str = ft_memalloc(2);
+		str[i++] = '-';
+		str[i] = '0';
+		return (str);
+	}
 	if (l->precision == 0)
 	{
 		f -= (long long)f;
@@ -927,20 +1010,22 @@ static void					free_struct(t_num_parts **mant_exp)
 	free(mant_exp);
 }
 
-static char					*add_to_string(int e, unsigned long mantis_byte, long double f, t_list *l)
+static char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
 {	
 	t_num_parts				**mant_exp;
 	char					*mantis;
 	int						**result;
 	int						count;
+	int						e;
 	int						i;
 	int						j;
 
 	j = 0;
 	i = 0;
+	e = ptr->doub.exp - 16383;
 	if (!(mantis = (char*)malloc(sizeof(char) * 65)))
 		return (NULL);
-	count = get_binary(&mantis, mantis_byte);
+	count = get_binary(&mantis, ptr->doub.mantis);
 	if (!(mant_exp = (t_num_parts**)malloc(sizeof(t_num_parts*) * (count + 1))))
 	{
 		free(mantis);
@@ -964,9 +1049,9 @@ static char					*add_to_string(int e, unsigned long mantis_byte, long double f, 
 	result = get_bignum(&mant_exp, count - 1);
 	free_struct(mant_exp);
 	if (result[1] == NULL)
-		mantis = str_fr_intmass(*result, size_int_mass(*result), l);
+		mantis = str_fr_intmass(*result, size_int_mass(*result), l, ptr->doub.sign);
 	else
-		mantis = get_bn_str(result, l);
+		mantis = get_bn_str(result, l, ptr->doub.sign);
 	free_doub_lvl_mass((void**)result);
 	return ((!mantis) ? NULL : mantis);
 }
@@ -1064,7 +1149,7 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	f = (ptr.doub.sign == 1) ? -f : f;
 	if (ptr.doub.exp - 16383 < 64)
 		order = norm_chr_ll(f, l, (int) ptr.doub.sign);
-	else if (!(order = add_to_string(ptr.doub.exp - 16383, ptr.doub.mantis, f, l)))
+	else if (!(order = add_to_string(&ptr, f, l)))
 		return (-1);
 	if (l->precision > 0)
 	{
@@ -1080,6 +1165,22 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	l->out_length = ft_strlen(double_num);
 	l->out = double_num;
 	l->fhash = 0;
+	chr_output(l);
+	return (1);
+}
+
+static int					output_b_flags(va_list args, t_list *l, char *type)
+{
+	long long				f;
+	char					*result;
+
+	f = va_arg(args, long long);
+	if (!(*type))
+		result = decimy_to_any((int)f, 2, 'b');
+	else
+		result = choose_length_chr(type, decimy_to_any, f, 'b');
+	l->out = result;
+	l->out_length = ft_strlen(result);
 	chr_output(l);
 	return (1);
 }
@@ -1103,6 +1204,8 @@ static int					ft_flag_function_find(va_list args, t_list *l, char *type)
 		res = output_p_flags(args, l, type);
 	else if (l->format[l->i] == 'f')
 		res = output_f_flags(args, l, type);
+	else if (l->format[l->i] == 'b')
+		res = output_b_flags(args, l, type);
 	l->i++;
 	return (res);
 }
@@ -1244,9 +1347,10 @@ static int					pars_format(t_list *l)
 	l->save = l->i;
 	while (l->format[l->save] != '%' && l->format[l->save] != '\n' && l->format[l->save])
 	{
-		if (!ft_memchr("diouxXscpf+-_. Llh#", l->format[l->save], 19) && !ft_isnum(l->format[l->save], 112))
+		if (!ft_memchr("diouxXscpf+-_. Llh#br", l->format[l->save], 21)
+			&& !ft_isnum(l->format[l->save], 112))
 			return (0);
-		if (ft_memchr("diouxXscpf", l->format[l->save], 10) && !(l->flag))
+		if (ft_memchr("diouxXscpfbr", l->format[l->save], 12) && !(l->flag))
 		{
 			l->flag = l->save;
 			return (1);
@@ -1268,7 +1372,8 @@ static int					specs_and_flags_fing(va_list args, t_list *l)
 	res = pars_format(l);
 	if (res && l->flag)
 	{
-		if (ft_memchr("Llh", l->format[l->type], 3))
+		if (ft_memchr("Llh", l->format[l->type], 3)
+			&& !ft_memchr("csp", l->format[l->flag], 3))
 			type = type_parse(l);
 		else
 			type = "";
@@ -1381,8 +1486,8 @@ int					ft_printf(const char *format, ...)
 // 	int count;
 // 	int	count1;
 
-// 	count = ft_printf("%05.0f\n", 7.3);
-// 	count1 = printf("%05.0f\n", 7.3);
+// 	count = ft_printf("this %+d number\n", 267);
+// 	count1 = printf("this %+d number\n", 267);
 
 // 	// printf("%d\n", count);
 // 	// printf("%d", count1);
