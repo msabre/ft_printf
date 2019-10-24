@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 19:36:25 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/24 21:54:23 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ static unsigned long long		to_power(unsigned long long a, int power)
 static void						zero_flags(t_list *l)
 {
 	l->precision_minus = 0;
+	l->start = -1;
 	l->fhash = 0;
 	l->sp = 0;
 	l->dot = 0;
@@ -941,7 +942,7 @@ static t_num_parts			*mantis_part_to_mult(int e)
 	while (e > 0)
 	{
 		ptr->num_part[i++] = (e >= 64)
-			? by_rank(18446744073709551615L) : by_rank(to_power(2, e));
+			? by_rank(18446744073709551615) : by_rank(to_power(2, e));
 		e -= (e >= 64) ? 64 : e;
 		if (!ptr->num_part[i - 1])
 		{
@@ -1097,8 +1098,8 @@ static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
 
 static void					after_dot_rounding(t_list *l, char **fractional)
 {
+	double long				up;
 	int						i;
-	int						up;
 
 	up = ((*fractional)[l->precision] >= 53) ? 1 : 0;
 	i = l->precision - 1;
@@ -1123,7 +1124,6 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 {
 	char					*fractional;
 	char					ptr;
-	double					f_ptr;
 	int						i;
 
 	i = 0;
@@ -1388,19 +1388,18 @@ static int					ft_variants(va_list args, t_list *l)
 	int				save_i;
 
 	save_i = l->i;
-	while (l->format[l->i] == '%' && l->format[l->i])
+	while (ft_memchr("% ", l->format[l->i], 2) && l->format[l->i])
 	{
 		if (l->format[l->i] == '%' && !(l->start))
-			l->start = 1;
+			l->start = l->i;
 		else if (l->format[l->i] == '%' && l->start)
 		{
-			if (l->format[l->i] == '%' && l->format[l->i - 1] == '%')
+			if (l->format[l->i] == '%')
 			{
-				l->free_block = 1;
-				if (!(get_buffer(l, "%")))
-					return (-1);
+				get_buffer(l, "%");
+				l->count++;
 			}
-			l->start = 0;
+			l->start = -1;
 		}
 		l->i++;
 	}
@@ -1485,18 +1484,22 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-// int					main(int argc, char **argv)
-// {
-// 	int count;
-// 	int	count1;
+int					main(int argc, char **argv)
+{
+	int count;
+	int	count1;
+	char	*c;
 
-// 	count = printf("%#.0f\n", 7.4);
-// 	count1 = ft_printf("%#.0f\n", 7.4);
+	c = "!!!!!!!!";
+	count1 = ft_printf("%s %d %p %% %x", "bonjour ", 42, &free, 42);
+	printf("\n");
+	count = printf("%s %d %p %% %x", "bonjour ", 42, &free, 42);
+	printf("\n");
 
-// 	printf("%d\n", count);
-// 	printf("%d", count1);
-// 	return (0);
-// }
+	printf("%d\n", count);
+	printf("%d", count1);
+	return (0);
+}
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
