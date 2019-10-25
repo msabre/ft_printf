@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/24 21:54:23 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/25 22:08:00 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,13 +77,14 @@ static unsigned long long		to_power(unsigned long long a, int power)
 static void						zero_flags(t_list *l)
 {
 	l->precision_minus = 0;
+	l->free_block = 0;
 	l->start = -1;
 	l->fhash = 0;
 	l->sp = 0;
 	l->dot = 0;
 	l->type = 0;
 	l->flag = 0;
-	l->start = 0;
+	l->start = -1;
 	l->fzero = 0;
 	l->fminus = 0;
 	l->fplus = 0;
@@ -162,6 +163,7 @@ static char					*ft_str_rev(char **str)
 	while (size >= stop)
 		str_reverse[i++] = str[0][size--];
 	str_reverse[i] = '\0';
+	free(*str);
 	return (str_reverse);
 }
 
@@ -187,7 +189,6 @@ static char					*decimy_to_any(unsigned long long num_integer,
 								int num_system, char flag)
 {
 	char				*result;
-	char				*result_reverse;
 	int					alp_register;
 	
 	alp_register = 65;
@@ -200,10 +201,9 @@ static char					*decimy_to_any(unsigned long long num_integer,
 		return (result);
 	}
 	get_newbase_res(num_integer, num_system, result, alp_register);
-	if (!(result_reverse = ft_str_rev(&result)))
+	if (!(result = ft_str_rev(&result)))
 		return (NULL);
-	free(result);
-	return (result_reverse);
+	return (result);
 }
 
 static char					*ft_itoa_usigned(unsigned long long n, int count, char flag)
@@ -271,7 +271,7 @@ static int					get_buffer(t_list *l, char *new_str)
 {
 	char					*ptr;
 	
-	if (!new_str)
+	if (new_str == NULL)
 		return (1);
 	ptr = l->buffer_for_write;
 	l->buffer_for_write = ft_strjoin(ptr, new_str);
@@ -284,7 +284,7 @@ static int					get_buffer(t_list *l, char *new_str)
 
 static void					flag_config(t_list *l)
 {
-	if (l->format[l->flag] == 'f')
+	if (!ft_memchr("Xxop", l->format[l->flag], 4))
 		l->fhash = 0;
 	if (l->precision < 0)
 		l->length = 0;
@@ -299,14 +299,14 @@ static void					flag_config(t_list *l)
 	if (l->fplus && (!ft_memchr("dioxXf", l->format[l->flag], 6)
 		|| *(l->out) == '-'))
 		l->fplus = 0;
+	if (mod_compair(l->out_length, l->precision) == 1
+		|| ft_memchr("cs", l->format[l->flag], 2))
+		l->precision = 0;
 	if (mod_compair(l->out_length, l->length) == 1
 		|| mod_compair(l->out_length, l->length) == 0)
 		l->length = 0;
 	if (mod_compair(l->precision, l->length) == 1)
 		l->length = 0;
-	if (mod_compair(l->out_length, l->precision) == 1
-		|| ft_memchr("cs", l->format[l->flag], 2))
-		l->precision = 0;
 	if (l->sp > 0 && *(l->out) == '-')
 		l->sp = 0;
 }
@@ -359,7 +359,10 @@ static char					*flag_inicializatian(t_list *l)
 	else if (l->sp > 0 && l->precision && l->length >= 0)
 		l->sp = 0;
 	if (!(result = ft_memalloc((l->out_length + count_space + l->dop_count + l->fplus))))
+	{
+		free(l->out);
 		return (NULL);
+	}
 	(l->dop >= 0) ? result[l->dop] = '\0' : 1;
 	return (result);
 }
@@ -481,7 +484,6 @@ static int					fill_output(t_list *l, char *result)
 static int					chr_output(t_list *l)
 {
 	char				*result;
-	int					count_summ;
 
 	if (!(result = flag_inicializatian(l)))
 		return (-1);
@@ -552,6 +554,8 @@ static int						output_u_flags(va_list args,
 	int					count;
 
 	u = va_arg(args, unsigned long long);
+	if (l->sp)
+		l->sp = 0;
 	if (!(*type))
 		out = ft_itoa_usigned((unsigned int)u, 0, type[0]);
 	else
@@ -559,6 +563,11 @@ static int						output_u_flags(va_list args,
 	if (!out)
 		return (-1);
 	l->out_length = ft_strlen(out);
+	if (l->dot && l->precision == 0 && *out == '0')
+	{
+		*out = '\0';
+		l->out_length = 0;
+	}
 	l->out = out;
 	return (chr_output(l));
 }
@@ -641,11 +650,13 @@ static int					output_cs_flags(va_list args, t_list *l)
 	char			c;
 
 	l->free_block = 1;
+	if (l->sp)
+			l->sp = 0;
 	if (l->format[l->i] == 's')
 		s_flag_config(l, args);
 	else
 	{
-		if (!(l->out = (char*)malloc(sizeof(char) * 1)))
+		if (!(l->out = ft_memalloc(1)))
 			return (-1);
 		c = va_arg(args, int);
 		*(l->out) = c;
@@ -986,6 +997,7 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 	double long				num;
 	int						i;
 
+	i = 0;
 	num = (unsigned long long int)f;
 	if (num == 0 && sign == 1 && l->precision  == 0)
 	{
@@ -1092,7 +1104,7 @@ static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
 	ft_strcat(double_chr, chr_order);
 	double_chr[l_order] = '.';
 	double_chr[l_order + 1] = '\0';
-	ft_strcat(double_chr, mantis);
+	ft_strlcat(double_chr, mantis, l_mantis + l_order + 1);
 	return (double_chr);
 }
 
@@ -1117,7 +1129,6 @@ static void					after_dot_rounding(t_list *l, char **fractional)
 		}
 		i--;
 	}
-	(*fractional)[l->precision] = '\0';
 }
 
 static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
@@ -1128,20 +1139,41 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 
 	i = 0;
 	f -= (long long)f;
-	if (!(fractional = (char*)malloc(sizeof(char) * (precision + 1))))
+	if (!(fractional = (char*)malloc(sizeof(char) * (precision + 2))))
 		return (NULL);
-	while (i <= precision && e < 64)
+	if (e < 64)
 	{
-		f *= 10;
-		ptr = (int)f + 48;
-		fractional[i++] = ptr;
-		f -= (long long)f;
+		while (i <= precision)
+		{
+			f *= 10;
+			ptr = (int)f + 48;
+			fractional[i++] = ptr;
+			f -= (long long)f;
+		}
 	}
-	while (i <= precision && e >= 64)
-		fractional[i++] = '0';
+	if (e >= 64)
+		while (i <= precision)
+			fractional[i++] = '0';
 	fractional[i] = '\0';
 	after_dot_rounding(l, &fractional);
 	return (fractional);
+}
+
+static int					check_inf_or_nan(long double f, t_list *l)
+{
+	if (f > 0 && (f == f + f / .0))
+		l->out = "inf";
+	else if (f < 0 && (f = f + f / .0))
+		l->out = "-inf";
+	else if (f != f)
+		l->out = "nan";
+	if (l->out != NULL)
+	{
+		l->free_block = 1;
+		l->out_length = ft_strlen(l->out);
+		l->precision = 0;
+	}
+	return (l->out != NULL ? chr_output(l) : -1);
 }
 
 static int					output_f_flags(va_list args, t_list *l, char *type)
@@ -1156,6 +1188,8 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	(*type == 'L') ? f = va_arg(args, long double) : 1;
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
+	if (check_inf_or_nan(f, l) > 0)
+		return (1);
 	if (ptr.doub.exp - 16383 < 64)
 		order = norm_chr_ll(f, l, (int) ptr.doub.sign);
 	else if (!(order = add_to_string(&ptr, f, l)))
@@ -1288,7 +1322,7 @@ static char				*type_parse(t_list *l, int lon, int shor)
 
 static int						length_check(t_list *l, int sign)
 {
-	char				*length_output;
+	char				length_output[21];
 	int					length;
 	int					i;
 	int					j;
@@ -1298,8 +1332,6 @@ static int						length_check(t_list *l, int sign)
 	length = 0;
 	while (!(l->format[j] >= 48 && l->format[j] <= 57))
 		j++;
-	if (!(length_output = (char*)malloc(sizeof(char) * ft_strlen(l->format))))
-		return (-1);
 	if (sign > 0)
 		length_output[i++] = '-';
 	while (l->format[j] >= 48 && l->format[j] <= 57)
@@ -1385,25 +1417,25 @@ static int					specs_and_flags_fing(va_list args, t_list *l)
 
 static int					ft_variants(va_list args, t_list *l)
 {
-	int				save_i;
-
-	save_i = l->i;
 	while (ft_memchr("% ", l->format[l->i], 2) && l->format[l->i])
 	{
-		if (l->format[l->i] == '%' && !(l->start))
+		if (l->format[l->i] == ' ')
+			l->sp = 1;
+		if (l->format[l->i] == '%' && l->start < 0)
 			l->start = l->i;
-		else if (l->format[l->i] == '%' && l->start)
+		else if (l->format[l->i] == '%' && l->start >= 0)
 		{
-			if (l->format[l->i] == '%')
-			{
-				get_buffer(l, "%");
-				l->count++;
-			}
+			get_buffer(l, "%");
 			l->start = -1;
+			if (l->format[l->i + 1] == ' ')
+			{
+				l->i++;
+				break ;
+			}
 		}
 		l->i++;
 	}
-	if (l->start)
+	if (l->start >= 0 && l->format[l->i])
 		return (specs_and_flags_fing(args, l));
 	return (1);
 }
@@ -1484,22 +1516,24 @@ int					ft_printf(const char *format, ...)
 	return (length);
 }
 
-int					main(int argc, char **argv)
-{
-	int count;
-	int	count1;
-	char	*c;
+// int					main(int argc, char **argv)
+// {
+// 	int				count;
+// 	int				count1;
+// 	char			*c;
+// 	double f = 121872638374.0;
+// 	f = f + (f / 0.0);
 
-	c = "!!!!!!!!";
-	count1 = ft_printf("%s %d %p %% %x", "bonjour ", 42, &free, 42);
-	printf("\n");
-	count = printf("%s %d %p %% %x", "bonjour ", 42, &free, 42);
-	printf("\n");
+// 	c = "!!!!!!!!";
+// 	count1 = ft_printf("%f", f);
+// 	printf("\n");
+// 	count = printf("%.18f", f);
+// 	printf("\n");
 
-	printf("%d\n", count);
-	printf("%d", count1);
-	return (0);
-}
+// 	printf("%d\n", count);
+// 	printf("%d", count1);
+// 	return (0);
+// }
 
 //Строки для теста
 //1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
