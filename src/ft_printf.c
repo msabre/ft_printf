@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/26 16:45:43 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/26 16:47:58 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1186,6 +1186,7 @@ static int					check_inf_or_nan(long double f, t_list *l, t_uni_dub *ptr, char *
 	}
 	if (l->out != NULL)
 	{
+		l->fzero = 0;
 		l->free_block = 1;
 		l->out_length = ft_strlen(l->out);
 		l->precision = 0;
@@ -1538,13 +1539,13 @@ int					ft_printf(const char *format, ...)
 // 	int				count;
 // 	int				count1;
 // 	char			*c;
-// 	double f = .0/.0;
+// 	double f = 123124.0;
 // 	f = f + (f / 0.0);
 
 // 	c = "!!!!!!!!";
 // 	// count1 = ft_printf("%.3Lf", LDBL_MAX);
 // 	// printf("\n");
-// 	count = printf("%f", f);
+// 	count = printf("%012f", f);
 // 	printf("\n");
 
 // 	printf("%d\n", count);
