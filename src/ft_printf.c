@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/26 18:53:14 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/26 19:13:14 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -578,7 +578,7 @@ static void						zero_res_xo_flags(t_list *l)
 	{
 		*(l->out) = '\0';
 		l->out_length = 0;
-		if (l->format[l->flag] == 'x')
+		if (ft_memchr("Xx", l->format[l->flag], 2))
 			l->fhash = 0;
 	}
 	else
@@ -1543,9 +1543,9 @@ int					ft_printf(const char *format, ...)
 // 	f = f + (f / 0.0);
 
 // 	c = "!!!!!!!!";
-// 	count1 = ft_printf("%llx", 212123123123123);
+// 	count1 = ft_printf("%#.0X", 0);
 // 	printf("\n");
-// 	count = printf("%llx", 212123123123123);
+// 	count = printf("%#.0X", 0);
 // 	printf("\n");
 
 // 	printf("%d\n", count);
