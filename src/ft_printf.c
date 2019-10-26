@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/26 16:47:58 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/26 18:53:14 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -852,6 +852,7 @@ static int					*long_multi(int *a, int *b, int a_size, int b_size)
 		j++;
 	}
 	result[i + 1] = -1;
+	free(c);
 	return (result);
 }
 
@@ -1023,10 +1024,16 @@ static char					*norm_chr_ll(long double f, t_list *l, int sign)
 static void					free_struct(t_num_parts **mant_exp)
 {
 	int						i;
+	int						j;
 
+	j = 0;
 	i = 0;
 	while (mant_exp[i] != NULL)
-		free((mant_exp[i++])->num_part);
+	{
+		free_doub_lvl_mass((void*)(mant_exp[i])->num_part);
+		free(mant_exp[i]);
+		i++;
+	}
 	free(mant_exp);
 }
 
@@ -1072,6 +1079,7 @@ static char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
 	if (!(mant_exp = get_and_fill_numparts(mant_exp, mantis, ptr->doub.exp - 16383)))
 		return (NULL);
 	mant_exp[count] = NULL;
+	(count == 64) ? count-- : 1;
 	result = get_bignum(&mant_exp, count - 1);
 	free_struct(mant_exp);
 	if (count == 1)
@@ -1105,6 +1113,8 @@ static char				*creat_double_chr(char *chr_order, char *mantis, int sign)
 	double_chr[l_order] = '.';
 	double_chr[l_order + 1] = '\0';
 	ft_strlcat(double_chr, mantis, l_mantis + l_order + 1);
+	free(chr_order);
+	free(mantis);
 	return (double_chr);
 }
 
@@ -1112,7 +1122,9 @@ static void					after_dot_rounding(t_list *l, char **fractional)
 {
 	double long				up;
 	int						i;
-
+	
+	// up = ((*fractional)[l->precision] % 2 == 0)
+	// 	? (*fractional)[l->precision] += 1 : 0;
 	up = ((*fractional)[l->precision] >= 53) ? 1 : 0;
 	i = l->precision - 1;
 	while (up > 0)
@@ -1161,16 +1173,6 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 
 static int					check_inf_or_nan(long double f, t_list *l, t_uni_dub *ptr, char *type)
 {
-	int						i;
-	int						exp_const;
-	unsigned long long		mantis_const;
-
-	i = 0;
-	// if (*type == 'L')
-	// {
-	// 	exp_const /= 2;
-	// 	mantis_const = (mantis_const - 1) * 2 + 1;
-	// }
 	if (f != f)
 	{
 		l->sp = 0;
@@ -1216,8 +1218,6 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	{
 		fractional = creat_after_dot(f, l->precision, l, ptr.doub.exp - 16383);
 		l->out = creat_double_chr(order, fractional, ptr.doub.sign);
-		free(fractional);
-		free(order);
 	}
 	else
 		l->out = order;
@@ -1543,9 +1543,9 @@ int					ft_printf(const char *format, ...)
 // 	f = f + (f / 0.0);
 
 // 	c = "!!!!!!!!";
-// 	// count1 = ft_printf("%.3Lf", LDBL_MAX);
-// 	// printf("\n");
-// 	count = printf("%012f", f);
+// 	count1 = ft_printf("%llx", 212123123123123);
+// 	printf("\n");
+// 	count = printf("%llx", 212123123123123);
 // 	printf("\n");
 
 // 	printf("%d\n", count);
