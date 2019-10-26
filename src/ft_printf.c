@@ -6,12 +6,10 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/26 19:13:14 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/26 19:41:18 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <limits.h>
-#include <float.h>
 #include "../includes/ft_printf.h"
 
 static int						ft_isnum(char c, int exception)
@@ -97,25 +95,6 @@ static void						zero_flags(t_list *l)
 	l->hash = NULL;
 	l->out = NULL;
 	l->spase = ' ';
-}
-
-static t_list					*struct_init(const char *format)
-{
-	t_list					*l;
-	
-	l = (t_list*)malloc(sizeof(t_list) * 1);
-	if (!l)
-		return (NULL);
-	l->i = 0;
-	l->count = 0;
-	l->n_count = 0;
-	l->format = format;
-	l->buffer_for_write = (char*)malloc(sizeof(char));
-	if (!(l->buffer_for_write))
-		return (NULL);
-	*(l->buffer_for_write) = '\0';
-	zero_flags(l);
-	return (l);
 }
 
 static char					*ft_strndup(const char *str, int start, int end)
@@ -1122,9 +1101,7 @@ static void					after_dot_rounding(t_list *l, char **fractional)
 {
 	double long				up;
 	int						i;
-	
-	// up = ((*fractional)[l->precision] % 2 == 0)
-	// 	? (*fractional)[l->precision] += 1 : 0;
+
 	up = ((*fractional)[l->precision] >= 53) ? 1 : 0;
 	i = l->precision - 1;
 	while (up > 0)
@@ -1280,10 +1257,9 @@ static int					unknow_output(t_list *l)
 	}
 	else
 	{
-		out = ft_strndup(l->format, l->save, l->save);
-		if (!out)
-			return (-1);
-		l->out_length = ft_strlen(out);
+		out = "%";
+		l->free_block = 1;
+		l->out_length = 1;
 		l->i = l->save;
 		l->i++;
 	}
@@ -1482,6 +1458,25 @@ static int			add_anytext_tobuff(t_list *l)
 	return (get_buffer(l, simple_text) ? 1 : -1);
 }
 
+static t_list					*struct_init(const char *format)
+{
+	t_list					*l;
+	
+	l = (t_list*)malloc(sizeof(t_list) * 1);
+	if (!l)
+		return (NULL);
+	l->i = 0;
+	l->count = 0;
+	l->n_count = 0;
+	l->format = format;
+	l->buffer_for_write = (char*)malloc(sizeof(char));
+	if (!(l->buffer_for_write))
+		return (NULL);
+	*(l->buffer_for_write) = '\0';
+	zero_flags(l);
+	return (l);
+}
+
 static void			dawrin_nulls(t_list *l)
 {
 	int				i;
@@ -1533,34 +1528,3 @@ int					ft_printf(const char *format, ...)
 	va_end(args);
 	return (length);
 }
-
-// int					main(int argc, char **argv)
-// {
-// 	int				count;
-// 	int				count1;
-// 	char			*c;
-// 	double f = 123124.0;
-// 	f = f + (f / 0.0);
-
-// 	c = "!!!!!!!!";
-// 	count1 = ft_printf("%#.0X", 0);
-// 	printf("\n");
-// 	count = printf("%#.0X", 0);
-// 	printf("\n");
-
-// 	printf("%d\n", count);
-// 	printf("%d", count1);
-// 	return (0);
-// }
-
-//Строки для теста
-//1844674483947593847598347957384759834387465872348795602837645876324875683624575987394579837459873947598347598379485798374598374985793874598739457938745983749857398475938745987394857983759374507.8736583687468934685763487658346534347686847864784687460
-//"1%%2%3%4%5%%%%%70pmamkapvoya\n",  "aaasasdasc"
-//"123#%45d%%%%%%%#-70pmamkapvoya\n",  "aaasasdasc"
-//"123#%45d%%%%%%%#+0+70pmamkapvoya\n",  -11234567, "aaasasdasc"
-//"%0134kwwww65ytcyxutrcvhbj.4+064f\n",  -11234567.123456789100
-//"%123y70d-065pmamkapvoya%.3f\n",  -11234567, "aaasasdasc", 1234567.1234567890
-
-//Если все идут hhhhhhhh то вывод будет на ll
-//Если все идут llllllll то вывод будет на ll
-//Если все идут hhhlhllhh и все в этом роде то вывод будет на ll
