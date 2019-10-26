@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/25 22:08:00 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/26 16:15:18 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -911,7 +911,7 @@ static int					*by_rank(unsigned long long int num)
 	i = 0;
 	if (!(result = (int*)malloc(sizeof(int) * (integer_size(num) + 1))))
 		return (NULL);
-	if (num == 18446744073709551615)
+	if (num == 18446744073709551615UL)
 	{
 		result[i++] = 6;
 		num /= 10;
@@ -953,7 +953,7 @@ static t_num_parts			*mantis_part_to_mult(int e)
 	while (e > 0)
 	{
 		ptr->num_part[i++] = (e >= 64)
-			? by_rank(18446744073709551615) : by_rank(to_power(2, e));
+			? by_rank(18446744073709551615UL) : by_rank(to_power(2, e));
 		e -= (e >= 64) ? 64 : e;
 		if (!ptr->num_part[i - 1])
 		{
@@ -1159,14 +1159,37 @@ static char					*creat_after_dot(long double f, int precision, t_list *l, int e)
 	return (fractional);
 }
 
-static int					check_inf_or_nan(long double f, t_list *l)
+// static int					check_inf_or_nan(long double f, t_list *l)
+// {
+// 	if (f > 0 && (f == f + f / .0))
+// 		l->out = "inf";
+// 	if (f < 0 && (f = f + f / .0))
+// 		l->out = "-inf";
+// 	if (f != f)
+// 		l->out = "nan";
+// 	if (l->out != NULL)
+// 	{
+// 		l->free_block = 1;
+// 		l->out_length = ft_strlen(l->out);
+// 		l->precision = 0;
+// 	}
+// 	return (l->out != NULL ? chr_output(l) : -1);
+// }
+
+static int					check_inf_or_nan(long double f, t_list *l, t_uni_dub *ptr)
 {
-	if (f > 0 && (f == f + f / .0))
-		l->out = "inf";
-	else if (f < 0 && (f = f + f / .0))
-		l->out = "-inf";
-	else if (f != f)
+	int						i;
+
+	i = 0;
+	if (f != f)
 		l->out = "nan";
+	else if (ptr->doub.exp == 32767 && ptr->doub.mantis == 9223372036854775808UL)
+	{
+		if (ptr->doub.sign == 1)
+			l->out = "-inf";
+		else
+			l->out = "inf";
+	}
 	if (l->out != NULL)
 	{
 		l->free_block = 1;
@@ -1188,7 +1211,7 @@ static int					output_f_flags(va_list args, t_list *l, char *type)
 	(*type == 'L') ? f = va_arg(args, long double) : 1;
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
-	if (check_inf_or_nan(f, l) > 0)
+	if (check_inf_or_nan(f, l, &ptr) > 0)
 		return (1);
 	if (ptr.doub.exp - 16383 < 64)
 		order = norm_chr_ll(f, l, (int) ptr.doub.sign);
@@ -1521,7 +1544,7 @@ int					ft_printf(const char *format, ...)
 // 	int				count;
 // 	int				count1;
 // 	char			*c;
-// 	double f = 121872638374.0;
+// 	double f = -121872638374.0;
 // 	f = f + (f / 0.0);
 
 // 	c = "!!!!!!!!";
