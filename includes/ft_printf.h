@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:46:47 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 22:10:08 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,8 @@ char					*choose_length_putnbr(char *type, char *(f)(long long),
 char					*choose_length_chr(char *type,
 						char *(f)(unsigned long long, int, char),
 						unsigned long long u, char flag);
-char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l);
+char					*add_to_string(t_uni_dub *ptr, long double f,
+						t_list *l);
 int						**get_bignum(t_num_parts ***num, int count);
 char					*get_bn_str(int **result, t_list *l, int sign);
 t_num_parts				**get_and_fill_numparts(t_num_parts **mant_exp,
@@ -97,5 +98,6 @@ char					*flag_inicializatian(t_list *l);
 int						add_anytext_tobuff(t_list *l);
 int						chr_output(t_list *l);
 int						get_buffer(t_list *l, char *new_str);
+int						ft_num_sys(char flag);
 
 #endif

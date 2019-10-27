@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:36:55 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:31:06 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 22:01:44 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,18 +24,6 @@ int			get_buffer(t_list *l, char *new_str)
 	free(ptr);
 	if (!(l->buffer_for_write))
 		return (-1);
-	return (1);
-}
-
-int			chr_output(t_list *l)
-{
-	char	*result;
-
-	if (!(result = flag_inicializatian(l)))
-		return (-1);
-	if (!(fill_output(l, result)))
-		return (-1);
-	(l->free_block == 0) ? free(l->out) : 1;
 	return (1);
 }
 
@@ -61,4 +49,16 @@ int			add_anytext_tobuff(t_list *l)
 	}
 	simple_text[j] = '\0';
 	return (get_buffer(l, simple_text) ? 1 : -1);
+}
+
+int			chr_output(t_list *l)
+{
+	char	*result;
+
+	if (!(result = flag_inicializatian(l)))
+		return (-1);
+	if (!(fill_output(l, result)))
+		return (-1);
+	(l->free_block == 0) ? free(l->out) : 1;
+	return (1);
 }

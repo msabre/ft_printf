@@ -6,7 +6,7 @@
 #    By: msabre <msabre@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/10/27 21:47:45 by msabre            #+#    #+#              #
-#    Updated: 2019/10/27 21:48:40 by msabre           ###   ########.fr        #
+#    Updated: 2019/10/27 22:05:40 by msabre           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,8 +24,8 @@ DIR_O = temporary
 
 HEADER = includes/ft_printf.h
 
-SOURCES = ft_printf.c variants.c scp_flags.c parse_format.c output.c output_define.c output_fill.c ft_flag_find.c f_str_fr_int_mass.c f_regular_value.c f_long_value.c f_long_summ.c \
-f_long_multi.c f_long_ariphmetic.c f_flag dioux_transitions.c dioux_functions.c dioux_flags.c \
+SOURCES = ft_printf.c variants.c scp_flags.c parse_format.c output.c output_define.c output_fill.c ft_flag_find.c f_str_fr_int_mass.c f_regular_value.c f_long_value.c f_long_summ.c f_long_multi.c \
+f_long_ariphmetic.c f_flag.c dioux_transitions.c dioux_functions.c dioux_flags.c \
 
 OBJS = $(addprefix $(DIR_O)/,$(SOURCES:.c=.o))
 

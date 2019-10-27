@@ -6,13 +6,13 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:50:45 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 20:41:54 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 22:09:28 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
 
-static int	ft_num_sys(char flag)
+int			ft_num_sys(char flag)
 {
 	int		num_system;
 
