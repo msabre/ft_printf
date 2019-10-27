@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/22 18:30:36 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 21:13:21 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,40 +16,6 @@
 # include <string.h>
 # include <fcntl.h>
 # include <unistd.h>
-
-typedef struct			s_list
-{
-	int					count;
-	int					i;
-	int					sp;
-	int					dot;
-	int					save;
-	int					type;
-	int					flag;
-	int					start;
-	int					fhash;
-	int					fplus;
-	int					fzero;
-	int					fminus;
-	int					precision_minus;
-	int					length;
-	int					precision;
-	int					out_length;
-	int					dop;
-	int					dop_count;
-	int					cut_s;
-	int					n_count;
-	int					free_block;
-	char				*out;
-	char				darwin_null[15];
-	char				spase;
-	char				*hash;
-	char				*buffer_for_write;
-	const char			*format;
-	void				*content;
-	size_t				content_size;
-	struct s_list		*next;
-}						t_list;
 
 typedef struct			s_map_ind
 {
@@ -82,17 +48,6 @@ typedef struct			s_num_parts
 	struct s_num_parts	*next;
 	struct s_num_parts	*prev;
 }						t_num_parts;
-
-typedef union			s_uni_dub
-{
-	long double			val;
-	struct
-	{
-		unsigned long	mantis : 64;
-		unsigned		exp : 15;
-		unsigned		sign : 1;
-	}					doub;
-}						t_uni_dub;
 
 void					*ft_memset(void *b, int c, size_t len);
 void					ft_bzero(void *s, size_t n);
@@ -163,5 +118,15 @@ void					ft_lstdel(t_lf **alst);
 void					ft_lstiter(t_list *lst, void (*f)(t_list *elem));
 t_list					*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
 void					ft_lstadd(t_num_parts **alst, t_num_parts *new);
+int						*creat_int_mass(int size);
+int						integer_size(unsigned long long num);
+void					*free_doub_lvl_mass(void **mas);
+int						ft_isnum(char c, int exception);
+int						size_int_mass(int *a);
+int						mod_plus(int a, int b);
+int						mod_minus(int a, int b);
+int						mod_compair(int a, int b);
+char					*ft_strndup(const char *str, int start, int end);
+unsigned long long		to_power(unsigned long long a, int power);
 
 #endif
