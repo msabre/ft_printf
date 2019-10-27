@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:45:18 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 18:37:59 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 21:46:21 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ static void		flag_check(t_list *l)
 	}
 }
 
-static int		pars_format(t_list *l)
+int				pars_format(t_list *l)
 {
 	int			save;
 

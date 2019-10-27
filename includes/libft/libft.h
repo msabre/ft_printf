@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:13:21 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 21:42:22 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,11 +112,6 @@ void					ft_putchar_fd(char c, int fd);
 void					ft_putstr_fd(char const *s, int fd);
 void					ft_putendl_fd(char const *s, int fd);
 void					ft_putnbr_fd(int n, int fd);
-t_list					*ft_lstnew(void const *content, size_t content_size);
-void					ft_lstdelone(t_list **alst, void (*del)(void*, size_t));
-void					ft_lstdel(t_lf **alst);
-void					ft_lstiter(t_list *lst, void (*f)(t_list *elem));
-t_list					*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
 void					ft_lstadd(t_num_parts **alst, t_num_parts *new);
 int						*creat_int_mass(int size);
 int						integer_size(unsigned long long num);

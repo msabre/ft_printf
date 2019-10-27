@@ -6,11 +6,26 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/11 22:56:09 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:15:51 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 21:44:21 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
+
+static void			dawrin_nulls(t_list *l)
+{
+	int				i;
+	int				j;
+
+	i = 0;
+	j = 0;
+	while (l->darwin_null[i] >= 0)
+	{
+		j = l->darwin_null[i];
+		l->buffer_for_write[j] = '\0';
+		i++;
+	}
+}
 
 static int			print_output(int length, t_list *l)
 {
@@ -64,21 +79,6 @@ static t_list		*struct_init(const char *format)
 	*(l->buffer_for_write) = '\0';
 	zero_flags(l);
 	return (l);
-}
-
-static void			dawrin_nulls(t_list *l)
-{
-	int				i;
-	int				j;
-
-	i = 0;
-	j = 0;
-	while (l->darwin_null[i] >= 0)
-	{
-		j = l->darwin_null[i];
-		l->buffer_for_write[j] = '\0';
-		i++;
-	}
 }
 
 int					ft_printf(const char *format, ...)

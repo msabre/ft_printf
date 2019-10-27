@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:32:40 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 21:46:47 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,8 +62,9 @@ typedef union			s_uni_dub
 
 int						ft_printf(const char *format, ...);
 int						ft_variants(va_list args, t_list *l);
+int						pars_format(t_list *l);
 int						ft_flag_function_find(va_list args, t_list *l,
-						char *type)
+						char *type);
 int						output_b_flags(va_list args, t_list *l, char *type);
 int						output_cs_flags(va_list args, t_list *l);
 int						output_p_flags(va_list args, t_list *l, char *type);
@@ -73,21 +74,21 @@ int						output_xo_flags(va_list args, t_list *l, char *type);
 int						output_f_flags(va_list args, t_list *l, char *type);
 char					*putnbr_di(long long a);
 char					*ft_itoa_usigned(unsigned long long n, int count,
-						char flag)
+						char flag);
 char					*decimy_to_any(unsigned long long num_integer,
-						int num_system, char flag)
+						int num_system, char flag);
 char					*choose_length_putnbr(char *type, char *(f)(long long),
 						long long u);
 char					*choose_length_chr(char *type,
 						char *(f)(unsigned long long, int, char),
-						unsigned long long u, char flag)
+						unsigned long long u, char flag);
 char					*add_to_string(t_uni_dub *ptr, long double f, t_list *l);
 int						**get_bignum(t_num_parts ***num, int count);
 char					*get_bn_str(int **result, t_list *l, int sign);
 t_num_parts				**get_and_fill_numparts(t_num_parts **mant_exp,
 						char *mantis, int e);
 char					*creat_after_dot(long double f, int precision,
-						t_list *l, int e)
+						t_list *l, int e);
 void					after_dot_rounding(t_list *l, char **fractional);
 char					*norm_chr_ll(long double f, t_list *l, int sign);
 char					*str_fr_intmass(int *a, int size, t_list *l, int sign);
