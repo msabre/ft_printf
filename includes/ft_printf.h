@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/28 15:46:44 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 18:41:00 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ typedef struct			s_list
 	struct s_list		*next;
 }						t_list;
 
-typedef union			s_uni_dub
+typedef union
 {
 	long double			val;
 	struct
