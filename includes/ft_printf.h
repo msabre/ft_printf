@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 22:12:47 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 15:46:44 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ typedef union			s_uni_dub
 
 int						ft_printf(const char *format, ...);
 int						ft_variants(va_list args, t_list *l);
-int						pars_format(t_list *l);
+int						pars_format(t_list *l, va_list args);
 int						ft_flag_function_find(va_list args, t_list *l,
 						char *type);
 int						output_b_flags(va_list args, t_list *l, char *type);

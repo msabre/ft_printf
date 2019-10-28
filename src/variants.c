@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:47:35 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:46:03 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 15:47:54 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ static int			specs_and_flags_fing(va_list args, t_list *l)
 	char			*type;
 	int				res;
 
-	res = pars_format(l);
+	res = pars_format(l, args);
 	if (res && l->flag)
 	{
 		if (ft_memchr("Llh", l->format[l->type], 3)
