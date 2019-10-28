@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:47:35 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/28 15:47:54 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 18:18:19 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,8 @@ static int			unknow_output(t_list *l)
 	}
 	else
 	{
-		out = "%";
-		l->free_block = 1;
-		l->out_length = 1;
+		out = ft_strndup(l->format, l->save, l->i);
+		l->out_length = ft_strlen(out);
 		l->i = l->save;
 		l->i++;
 	}
