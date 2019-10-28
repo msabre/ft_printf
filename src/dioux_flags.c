@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:02:34 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:20:59 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/27 22:15:35 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ int						output_u_flags(va_list args, char *type, t_list *l)
 	return (chr_output(l));
 }
 
-static void						zero_res_xo_flags(t_list *l)
+static void				zero_res_xo_flags(t_list *l)
 {
 	if (l->dot > 0 && l->precision == 0)
 	{

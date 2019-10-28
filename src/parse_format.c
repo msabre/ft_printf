@@ -6,13 +6,13 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:45:18 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:46:21 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 15:40:19 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
 
-static int		length_check(t_list *l, int sign)
+static int		length_check(t_list *l, int sign, va_list args)
 {
 	char		length_output[21];
 	int			length;
@@ -22,10 +22,16 @@ static int		length_check(t_list *l, int sign)
 	i = 0;
 	j = l->save;
 	length = 0;
+	if (l->format[j] == '*')
+	{
+		length = va_arg(args, int);
+		(l->dot > 0 && length < 0) ? length = 0 : 1;
+		(l->dot > 0 && length < 0) ? l->dot = 0 : 1;
+		return (length);
+	}
 	while (!(l->format[j] >= 48 && l->format[j] <= 57))
 		j++;
-	if (sign > 0)
-		length_output[i++] = '-';
+	(sign > 0) ? length_output[i++] = '-' : 1;
 	while (l->format[j] >= 48 && l->format[j] <= 57)
 		length_output[i++] = l->format[j++];
 	length_output[i] = '\0';
@@ -35,7 +41,7 @@ static int		length_check(t_list *l, int sign)
 	return (length);
 }
 
-static void		flag_check(t_list *l)
+static void		flag_check(t_list *l, va_list args)
 {
 	if (l->format[l->save] == ' ')
 		l->sp++;
@@ -47,22 +53,23 @@ static void		flag_check(t_list *l)
 		l->fzero = l->save;
 	else if (l->format[l->save] == '-' && !l->fminus)
 		l->fminus = l->save;
-	else if (ft_isnum(l->format[l->save], 0))
-		l->length = length_check(l, l->fminus);
+	else if (ft_isnum(l->format[l->save], 0) || l->format[l->save] == '*')
+		l->length = length_check(l, l->fminus, args);
 	else if (l->format[l->save] == '.')
 	{
 		l->dot = l->save;
-		if ((ft_isnum(l->format[l->save + 1], 10)
-			|| ft_memchr("+-", l->format[l->save + 1], 2)))
+		if (ft_isnum(l->format[l->save + 1], 10)
+			|| ft_memchr("+-", l->format[l->save + 1], 2)
+			|| l->format[l->save + 1] == '*')
 		{
 			l->precision_minus = (l->format[l->save + 1] == '-') ? 1 : -1;
-			(l->format[l->save + 1] == '-') ? l->save++ : l->save;
-			l->precision = length_check(l, l->precision_minus);
+			(ft_memchr("-*", l->format[l->save + 1], 2)) ? l->save++ : l->save;
+			l->precision = length_check(l, l->precision_minus, args);
 		}
 	}
 }
 
-int				pars_format(t_list *l)
+int				pars_format(t_list *l, va_list args)
 {
 	int			save;
 
@@ -70,7 +77,7 @@ int				pars_format(t_list *l)
 	while (l->format[l->save] != '%' && l->format[l->save] != '\n'
 		&& l->format[l->save])
 	{
-		if (!ft_memchr("diouxXscpf+-_. Llh#br", l->format[l->save], 21)
+		if (!ft_memchr("diouxXscpf+-_. *Llh#br", l->format[l->save], 22)
 			&& !ft_isnum(l->format[l->save], 112))
 			return (0);
 		if (ft_memchr("diouxXscpfbr", l->format[l->save], 12) && !(l->flag))
@@ -80,7 +87,7 @@ int				pars_format(t_list *l)
 		}
 		else if (ft_memchr("Llh", l->format[l->save], 3) && !(l->type))
 			l->type = l->save;
-		flag_check(l);
+		flag_check(l, args);
 		l->save++;
 	}
 	l->i = l->save;
