@@ -6,7 +6,7 @@
 #    By: msabre <msabre@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/10/27 21:47:45 by msabre            #+#    #+#              #
-#    Updated: 2019/10/27 22:05:40 by msabre           ###   ########.fr        #
+#    Updated: 2019/10/28 19:52:34 by msabre           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ C = clang
 
 NAME = libftprintf.a
 
-FLAGS = -c -O2
+FLAGS = -c -Wall -Werror -Wextra
 
 LIBFT = ./includes/libft
 

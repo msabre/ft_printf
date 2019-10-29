@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:38:06 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:17:39 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:15:11 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int			ft_flag_function_find(va_list args, t_list *l, char *type)
 	else if (ft_memchr("cs", l->format[l->i], 2))
 		res = output_cs_flags(args, l);
 	else if (l->format[l->i] == 'p')
-		res = output_p_flags(args, l, type);
+		res = output_p_flags(args, l);
 	else if (l->format[l->i] == 'f')
 		res = output_f_flags(args, l, type);
 	else if (l->format[l->i] == 'b')

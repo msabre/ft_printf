@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:47:35 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/28 18:22:29 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:20:49 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ static int			unknow_output(t_list *l)
 	return (1);
 }
 
-static char			*type_define(int lon, int shor, char flag)
+static char			*type_define(int lon, int shor)
 {
 	char			*type;
 
@@ -51,6 +51,8 @@ static char			*type_define(int lon, int shor, char flag)
 		type = "hh";
 	else if (lon == -2)
 		type = "L";
+	else
+		type = "";
 	return (type);
 }
 
@@ -79,7 +81,7 @@ static char			*type_parse(t_list *l, int lon, int shor)
 		}
 		l->type++;
 	}
-	return (type_define(lon, shor, l->flag));
+	return (type_define(lon, shor));
 }
 
 static int			specs_and_flags_fing(va_list args, t_list *l)

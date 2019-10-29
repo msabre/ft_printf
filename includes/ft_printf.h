@@ -6,12 +6,12 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 21:05:20 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/28 18:41:00 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:14:36 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FT_PRINFT_H
-# define FT_PRINFT_H
+#ifndef FT_PRINTF_H
+# define FT_PRINTF_H
 # include "libft/libft.h"
 # include <stdarg.h>
 
@@ -67,7 +67,7 @@ int						ft_flag_function_find(va_list args, t_list *l,
 						char *type);
 int						output_b_flags(va_list args, t_list *l, char *type);
 int						output_cs_flags(va_list args, t_list *l);
-int						output_p_flags(va_list args, t_list *l, char *type);
+int						output_p_flags(va_list args, t_list *l);
 int						output_di_flags(va_list args, char *type, t_list *l);
 int						output_u_flags(va_list args, char *type, t_list *l);
 int						output_xo_flags(va_list args, t_list *l, char *type);
@@ -82,8 +82,7 @@ char					*choose_length_putnbr(char *type, char *(f)(long long),
 char					*choose_length_chr(char *type,
 						char *(f)(unsigned long long, int, char),
 						unsigned long long u, char flag);
-char					*add_to_string(t_uni_dub *ptr, long double f,
-						t_list *l);
+char					*add_to_string(t_uni_dub *ptr, t_list *l);
 int						**get_bignum(t_num_parts ***num, int count);
 char					*get_bn_str(int **result, t_list *l, int sign);
 t_num_parts				**get_and_fill_numparts(t_num_parts **mant_exp,

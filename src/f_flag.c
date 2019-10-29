@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:10:13 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 20:46:16 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:16:07 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,7 @@ static char		*creat_double_chr(char *chr_order, char *mantis,
 	return (double_chr);
 }
 
-static int		check_inf_or_nan(long double f, t_list *l,
-											t_uni_dub *ptr, char *type)
+static int		check_inf_or_nan(long double f, t_list *l, t_uni_dub *ptr)
 {
 	if (f != f)
 	{
@@ -81,11 +80,11 @@ int				output_f_flags(va_list args, t_list *l, char *type)
 	(*type == 'L') ? f = va_arg(args, long double) : 1;
 	ptr.val = f;
 	f = (ptr.doub.sign == 1) ? -f : f;
-	if (check_inf_or_nan(f, l, &ptr, type) > 0)
+	if (check_inf_or_nan(f, l, &ptr) > 0)
 		return (1);
 	if (ptr.doub.exp - 16383 < 64)
 		order = norm_chr_ll(f, l, (int)ptr.doub.sign);
-	else if (!(order = add_to_string(&ptr, f, l)))
+	else if (!(order = add_to_string(&ptr, l)))
 		return (-1);
 	if (l->precision > 0)
 	{

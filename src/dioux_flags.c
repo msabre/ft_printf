@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:02:34 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 22:15:35 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:24:26 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,10 @@ int						output_di_flags(va_list args, char *type, t_list *l)
 {
 	long long			d;
 	char				*d_chr;
-	int					out_length;
 
 	d = va_arg(args, long long);
 	(ft_strcmp(type, "h") && d == 32768) ? d = d * (-1) : d;
-	if (!(*type))
+	if (ft_strcmp("", type) == 0)
 		d_chr = putnbr_di((int)d);
 	else
 		d_chr = choose_length_putnbr(type, putnbr_di, d);
@@ -41,7 +40,6 @@ int						output_u_flags(va_list args, char *type, t_list *l)
 {
 	unsigned long long	u;
 	char				*out;
-	int					count;
 
 	u = va_arg(args, unsigned long long);
 	if (l->sp)

@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:45:18 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/28 16:16:11 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 20:11:47 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ static int		wildcard_config(t_list *l, va_list args)
 	int			length;
 
 	length = va_arg(args, int);
+	if (length > 0 && l->fminus)
+		length *= (-1);
 	if (l->dot > 0 && length < 0)
 	{
 		length = 0;
@@ -79,8 +81,6 @@ static void		flag_check(t_list *l, va_list args)
 
 int				pars_format(t_list *l, va_list args)
 {
-	int			save;
-
 	l->save = l->i;
 	while (l->format[l->save] != '%' && l->format[l->save] != '\n'
 		&& l->format[l->save])

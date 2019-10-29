@@ -6,18 +6,17 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:49:32 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 21:18:19 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:12:18 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/ft_printf.h"
 
-int					output_p_flags(va_list args, t_list *l, char *type)
+int					output_p_flags(va_list args, t_list *l)
 {
 	unsigned long	p;
 	char			*integer;
 	void			*adres;
-	int				count;
 
 	adres = va_arg(args, void*);
 	p = (long)(adres);

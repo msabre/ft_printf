@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:22:23 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 20:46:14 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:13:27 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,6 @@ static int				**calculations_bn(t_num_parts ***num, int count,
 										int **result, int j)
 {
 	int					*a;
-	int					*b;
 	int					i;
 
 	while (count >= 0)

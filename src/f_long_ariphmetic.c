@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 20:26:44 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 20:46:19 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:15:56 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ static void			free_struct(t_num_parts **mant_exp)
 	free(mant_exp);
 }
 
-char				*add_to_string(t_uni_dub *ptr, long double f, t_list *l)
+char				*add_to_string(t_uni_dub *ptr, t_list *l)
 {
 	t_num_parts		**mant_exp;
 	char			*mantis;

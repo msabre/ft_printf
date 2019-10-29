@@ -6,7 +6,7 @@
 /*   By: msabre <msabre@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/26 19:58:50 by msabre            #+#    #+#             */
-/*   Updated: 2019/10/27 20:46:25 by msabre           ###   ########.fr       */
+/*   Updated: 2019/10/28 19:51:03 by msabre           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,20 +60,17 @@ static char				*get_newbase_res(unsigned long long num_integer,
 
 char					*putnbr_di(long long a)
 {
-	long long			n;
+	unsigned long long	n;
 	char				*integer;
 	int					i;
 
 	i = 0;
-	n = a;
+	n = (a < 0) ? -a : a;
 	if (!(integer = (char*)malloc(sizeof(char) * 20)))
 		return (NULL);
 	(n == 0) ? integer[i++] = '0' : 1;
-	if (n < 0)
-	{
+	if (a < 0)
 		integer[i++] = '-';
-		n = -n;
-	}
 	while (n > 0)
 	{
 		integer[i] = n % 10 + 48;
@@ -92,6 +89,7 @@ char					*ft_itoa_usigned(unsigned long long n,
 
 	save = n;
 	(n == 0) ? count = 1 : count;
+	(flag == 'u') ? flag = 'U' : 'u';
 	while (save > 0)
 	{
 		save = save / 10;
